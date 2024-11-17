@@ -10,6 +10,7 @@ import {
 } from "../prisma/userQueries.js";
 import { passport } from "../utils/passportConfig.js";
 import jwt from "jsonwebtoken";
+import { upload } from "../utils/multerConfig.js";
 
 const registerFormValidation = [
   body("firstname").notEmpty().withMessage("First name can't be empty"),
@@ -161,11 +162,48 @@ const deleteUser = async (req, res) => {
   return res.status(400).json({ error: "failed to delete" });
 };
 
+const uploadPhoto = [
+  upload.single("profilepic"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+      // Can now access the uploaded file in req.file
+      // Proceed with storing the file (e.g., uploading to Cloudinary)
+
+      res.status(200).json({ message: "File uploaded successfully" });
+    } catch (err) {
+      // Catch Multer errors
+      if (err instanceof multer.MulterError) {
+        // Multer-specific error (e.g., file size limit exceeded, file type mismatch)
+        if (err.code === "LIMIT_FILE_SIZE") {
+          return res
+            .status(400)
+            .json({ error: "File size exceeds the limit of 2MB" });
+        }
+        if (err.code === "LIMIT_UNEXPECTED_FILE") {
+          return res.status(400).json({ error: "Too many files uploaded" });
+        }
+        // Handle other Multer errors
+        return res.status(400).json({ error: `Multer error: ${err.message}` });
+      }
+
+      // Handle general errors
+      console.error(err);
+      res
+        .status(400)
+        .json({ error: "An error occurred during the file upload" });
+    }
+  },
+];
+
 export {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
   changePassword,
-  deleteUser
+  deleteUser,
+  uploadPhoto
 };
