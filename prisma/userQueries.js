@@ -54,7 +54,7 @@ const addUser = async (
   return user;
 };
 
-const updateUser = async (id, firstname, lastname, email, bio) => {
+const updateUser = async (id, firstname, lastname, username, email, bio) => {
   const user = await prisma.user.update({
     where: {
       id: id,
@@ -62,6 +62,7 @@ const updateUser = async (id, firstname, lastname, email, bio) => {
     data: {
       firstname: firstname,
       lastname: lastname,
+      username: username,
       email: email,
       status: bio,
     },
@@ -94,4 +95,16 @@ const deleteUserAccount = async (id) => {
   return user;
 };
 
-export { addUser, getUser, updateUser, updateUserPassword, deleteUserAccount };
+const uploadProfilePic = async (id, url) => {
+  const user = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      profilePicture: url,
+    },
+  });
+  console.log("updated user profile picture", user);
+};
+
+export { addUser, getUser, updateUser, updateUserPassword, deleteUserAccount, uploadProfilePic };

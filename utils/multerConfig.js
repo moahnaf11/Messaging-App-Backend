@@ -1,5 +1,5 @@
 import multer from "multer";
-import path from "path";
+
 
 const fileFilter = (req, file, cb) => {
   const allowedMimeTypes = [
