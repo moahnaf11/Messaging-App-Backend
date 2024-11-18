@@ -95,16 +95,37 @@ const deleteUserAccount = async (id) => {
   return user;
 };
 
-const uploadProfilePic = async (id, url) => {
+const updateProfilePic = async (id, url, publicId) => {
   const user = await prisma.user.update({
     where: {
       id: id,
     },
     data: {
       profilePicture: url,
+      public_id: publicId,
     },
   });
   console.log("updated user profile picture", user);
 };
 
-export { addUser, getUser, updateUser, updateUserPassword, deleteUserAccount, uploadProfilePic };
+const getProfilePic = async (id) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id: id,
+    },
+  });
+  if (!user.profilePicture) {
+    return null;
+  }
+  return user;
+};
+
+export {
+  addUser,
+  getUser,
+  updateUser,
+  updateUserPassword,
+  deleteUserAccount,
+  updateProfilePic,
+  getProfilePic,
+};

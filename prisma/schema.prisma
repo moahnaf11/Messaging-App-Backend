@@ -22,6 +22,7 @@ model User {
   email          String   @unique
   password       String
   profilePicture String? // URL to profile picture
+  public_id      String?
   status         String? // User's status (e.g., "Hey there!")
   online         Boolean  @default(false) // Online/offline status
   createdAt      DateTime @default(now())
@@ -35,6 +36,8 @@ model User {
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
   media            Media[]
+
+  @@map("users")
 }
 
 // Friend Model (for friend requests and relationships)
@@ -48,6 +51,8 @@ model Friend {
   // Relations to users
   requester User @relation("SentRequests", fields: [requesterId], references: [id])
   requestee User @relation("ReceivedRequests", fields: [requesteeId], references: [id])
+
+  @@map("friends")
 }
 
 // Message Model (for text, images, and videos)
@@ -66,6 +71,8 @@ model Message {
 
   // Relation to Media (optional)
   media Media? @relation(fields: [mediaId], references: [id])
+
+  @@map("messages")
 }
 
 // Media Model (for images/videos storage)
@@ -79,4 +86,6 @@ model Media {
   // Relation to the user who uploaded
   uploadedBy User      @relation(fields: [uploadedById], references: [id])
   Message    Message[]
+
+  @@map("medias")
 }

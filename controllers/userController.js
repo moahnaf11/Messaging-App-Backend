@@ -1,14 +1,19 @@
 import { body, validationResult } from "express-validator";
 import expressAsyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
-import { handleUpload, runMiddleware } from "../utils/cloudinaryConfig.js";
+import {
+  handleUpload,
+  runMiddleware,
+  cloudinary,
+} from "../utils/cloudinaryConfig.js";
 import {
   addUser,
   deleteUserAccount,
+  getProfilePic,
   getUser,
+  updateProfilePic,
   updateUser,
   updateUserPassword,
-  uploadProfilePic,
 } from "../prisma/userQueries.js";
 import { passport } from "../utils/passportConfig.js";
 import jwt from "jsonwebtoken";
@@ -164,14 +169,31 @@ const deleteUser = async (req, res) => {
   return res.status(400).json({ error: "failed to delete" });
 };
 
+const deletePhoto = async (id, publicId) => {
+  const result = await cloudinary.uploader.destroy(publicId);
+  console.log(result);
+  if (result.result === "ok") {
+    console.log("successfully deleted from cloudinary");
+    const user = await updateProfilePic(id, null, null);
+  }
+};
+
 const uploadPhoto = async (req, res) => {
   try {
+    const profilePic = await getProfilePic(req.params.id);
+    if (profilePic) {
+      await deletePhoto(req.params.id, profilePic.public_id);
+    }
     await runMiddleware(req, res, upload.single("profilepic"));
     const b64 = Buffer.from(req.file.buffer).toString("base64");
     let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
     const cldRes = await handleUpload(dataURI, req.params.id);
     console.log("cldRes", cldRes);
-    const user = await uploadProfilePic(req.params.id, cldRes.secure_url);
+    const user = await updateProfilePic(
+      req.params.id,
+      cldRes.secure_url,
+      cldRes.public_id
+    );
     return res.status(200).json(cldRes);
   } catch (error) {
     console.log(error);
@@ -179,6 +201,16 @@ const uploadPhoto = async (req, res) => {
       error: error.message,
     });
   }
+};
+
+const deleteUserProfilePic = async (req, res) => {
+  const profilePic = await getProfilePic(req.params.id);
+  if (profilePic) {
+    await deletePhoto(req.params.id, profilePic.public_id);
+    const user = await updateProfilePic(req.params.id, null, null);
+    return res.status(200).json(user);
+  }
+  return res.status(400).json({ error: "no profile pic to delete" });
 };
 
 export {
@@ -189,4 +221,5 @@ export {
   changePassword,
   deleteUser,
   uploadPhoto,
+  deleteUserProfilePic,
 };

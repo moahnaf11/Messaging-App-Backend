@@ -26,4 +26,6 @@ function runMiddleware(req, res, fn) {
   });
 }
 
-export { runMiddleware, handleUpload };
+
+
+export { cloudinary, runMiddleware, handleUpload };
