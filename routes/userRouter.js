@@ -4,9 +4,11 @@ import {
   changePassword,
   deleteUser,
   deleteUserProfilePic,
+  forgotPassword,
   getUserProfile,
   loginUser,
   registerUser,
+  resetPassword,
   updateUserProfile,
   uploadPhoto,
 } from "../controllers/userController.js";
@@ -14,6 +16,8 @@ const userRouter = Router();
 
 userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
+userRouter.post("/forgot-password", forgotPassword);
+userRouter.post("/reset-password", resetPassword);
 userRouter.post("/profile/:id/change-password", changePassword);
 userRouter.put("/profile/:id/upload-photo", authenticateToken, uploadPhoto);
 userRouter.get("/profile/:id", authenticateToken, getUserProfile);

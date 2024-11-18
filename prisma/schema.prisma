@@ -15,18 +15,20 @@ datasource db {
 
 // User Model
 model User {
-  id             String   @id @default(uuid())
-  firstname      String
-  lastname       String
-  username       String   @unique
-  email          String   @unique
-  password       String
-  profilePicture String? // URL to profile picture
-  public_id      String?
-  status         String? // User's status (e.g., "Hey there!")
-  online         Boolean  @default(false) // Online/offline status
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                   String    @id @default(uuid())
+  firstname            String
+  lastname             String
+  username             String    @unique
+  email                String    @unique
+  password             String
+  profilePicture       String? // URL to profile picture
+  public_id            String?
+  passwordResetToken   String? // Token for password reset
+  passwordResetExpires DateTime? // Expiration time for the token
+  status               String? // User's status (e.g., "Hey there!")
+  online               Boolean   @default(false) // Online/offline status
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   // Friends relationships
   sentRequests     Friend[] @relation("SentRequests")

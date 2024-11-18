@@ -1,6 +1,8 @@
 import { body, validationResult } from "express-validator";
 import expressAsyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
+import nodemailer from "nodemailer";
 import {
   handleUpload,
   runMiddleware,
@@ -10,10 +12,13 @@ import {
   addUser,
   deleteUserAccount,
   getProfilePic,
+  getToken,
   getUser,
   updateProfilePic,
+  updateResetPasswordToken,
   updateUser,
   updateUserPassword,
+  updateUserResetToken,
 } from "../prisma/userQueries.js";
 import { passport } from "../utils/passportConfig.js";
 import jwt from "jsonwebtoken";
@@ -213,6 +218,69 @@ const deleteUserProfilePic = async (req, res) => {
   return res.status(400).json({ error: "no profile pic to delete" });
 };
 
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Check if user exists
+    const user = await getUser(null, null, email);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Generate a reset token and expiration time
+    const resetToken = uuidv4();
+    await updateResetPasswordToken(email, resetToken);
+
+    // Send the reset link to the user's email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS, 
+      },
+    });
+
+    const resetUrl = `${req.protocol}://${req.get("host")}/reset-password/${resetToken}`;
+
+    await transporter.sendMail({
+      to: user.email,
+      subject: "Password Reset",
+      html: `<p>Hi ${user.firstname},</p>
+             <p>You requested a password reset. Click the link below to reset your password:</p>
+             <a href="${resetUrl}">Reset Password</a>
+             <p>If you did not request this, please ignore this email.</p>
+             <p>Here is your reset token please provide this in the token field ${resetToken}</p>`,
+    });
+
+    res.status(200).json({ message: "Password reset email sent" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { token, newPassword } = req.body;
+  try {
+    const user = await getToken(token);
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await updateUserResetToken(user.id, hashedPassword);
+
+    return res.status(200).json({ message: "Password reset successful" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -222,4 +290,6 @@ export {
   deleteUser,
   uploadPhoto,
   deleteUserProfilePic,
+  forgotPassword,
+  resetPassword,
 };

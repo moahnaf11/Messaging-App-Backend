@@ -1,22 +1,31 @@
 import { prisma } from "./prismaClient.js";
 
-const getUser = async (username = null, id = null) => {
+const getUser = async (username = null, id = null, email = null) => {
   if (username) {
-    const userUsername = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: {
         username: username,
       },
     });
-    console.log("get user", userUsername);
-    return userUsername;
+    console.log("get user", user);
+    return user;
+  } else if (id) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: id,
+      },
+    });
+    console.log("get user", user);
+    return user;
+  } else {
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+    });
+    console.log("get user", user);
+    return user;
   }
-  const userUsername = await prisma.user.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  console.log("get user", userUsername);
-  return userUsername;
 };
 
 const addUser = async (
@@ -120,6 +129,46 @@ const getProfilePic = async (id) => {
   return user;
 };
 
+const updateResetPasswordToken = async (email, resetToken) => {
+  // Set token and expiration in the database
+  const user = await prisma.user.update({
+    where: { email },
+    data: {
+      passwordResetToken: resetToken,
+      passwordResetExpires: new Date(Date.now() + 3600000), // 1 hour from now
+    },
+  });
+  console.log("updated reset password token", user);
+  return user;
+};
+
+const getToken = async (token) => {
+  const user = await prisma.user.findFirst({
+    where: {
+      passwordResetToken: token,
+      passwordResetExpires: {
+        gte: new Date(),
+      },
+    },
+  });
+  console.log("token for resetting password", user);
+  return user;
+};
+
+const updateUserResetToken = async (id, hashedPassword) => {
+  const user = await prisma.user.update({
+    where: { id: id },
+    data: {
+      password: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+    },
+  });
+
+  console.log("resetted user tokens", user);
+  return user;
+};
+
 export {
   addUser,
   getUser,
@@ -128,4 +177,7 @@ export {
   deleteUserAccount,
   updateProfilePic,
   getProfilePic,
+  getToken,
+  updateResetPasswordToken,
+  updateUserResetToken,
 };
