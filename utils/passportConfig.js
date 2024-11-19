@@ -10,7 +10,7 @@ passport.use(
       // Find the user in the database
       const user = await getUser(username);
       if (!user) {
-        return done(null, false, { message: "Invalid username or password" });
+        return done(null, false, { message: "Invalid username" });
       }
 
       // Compare passwords

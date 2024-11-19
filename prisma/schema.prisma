@@ -51,8 +51,8 @@ model Friend {
   createdAt   DateTime @default(now())
 
   // Relations to users
-  requester User @relation("SentRequests", fields: [requesterId], references: [id])
-  requestee User @relation("ReceivedRequests", fields: [requesteeId], references: [id])
+  requester User @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  requestee User @relation("ReceivedRequests", fields: [requesteeId], references: [id], onDelete: Cascade)
 
   @@map("friends")
 }
@@ -68,11 +68,11 @@ model Message {
   timestamp  DateTime @default(now())
 
   // Relations to users
-  sender   User @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   // Relation to Media (optional)
-  media Media? @relation(fields: [mediaId], references: [id])
+  media Media? @relation(fields: [mediaId], references: [id], onDelete: Cascade)
 
   @@map("messages")
 }
@@ -86,8 +86,8 @@ model Media {
   uploadedAt   DateTime @default(now())
 
   // Relation to the user who uploaded
-  uploadedBy User      @relation(fields: [uploadedById], references: [id])
-  Message    Message[]
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  message    Message[] 
 
   @@map("medias")
 }

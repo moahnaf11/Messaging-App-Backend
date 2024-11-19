@@ -63,72 +63,6 @@ const addUser = async (
   return user;
 };
 
-const updateUser = async (id, firstname, lastname, username, email, bio) => {
-  const user = await prisma.user.update({
-    where: {
-      id: id,
-    },
-    data: {
-      firstname: firstname,
-      lastname: lastname,
-      username: username,
-      email: email,
-      status: bio,
-    },
-  });
-  console.log("updated user", user);
-
-  return user;
-};
-
-const updateUserPassword = async (id, hashedPassword) => {
-  const user = await prisma.user.update({
-    where: {
-      id: id,
-    },
-    data: {
-      password: hashedPassword,
-    },
-  });
-  console.log("updated user password", user);
-  return user;
-};
-
-const deleteUserAccount = async (id) => {
-  const user = await prisma.user.delete({
-    where: {
-      id: id,
-    },
-  });
-  console.log("deleted user", user);
-  return user;
-};
-
-const updateProfilePic = async (id, url, publicId) => {
-  const user = await prisma.user.update({
-    where: {
-      id: id,
-    },
-    data: {
-      profilePicture: url,
-      public_id: publicId,
-    },
-  });
-  console.log("updated user profile picture", user);
-};
-
-const getProfilePic = async (id) => {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: id,
-    },
-  });
-  if (!user.profilePicture) {
-    return null;
-  }
-  return user;
-};
-
 const updateResetPasswordToken = async (email, resetToken) => {
   // Set token and expiration in the database
   const user = await prisma.user.update({
@@ -172,11 +106,6 @@ const updateUserResetToken = async (id, hashedPassword) => {
 export {
   addUser,
   getUser,
-  updateUser,
-  updateUserPassword,
-  deleteUserAccount,
-  updateProfilePic,
-  getProfilePic,
   getToken,
   updateResetPasswordToken,
   updateUserResetToken,

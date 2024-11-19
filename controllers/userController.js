@@ -4,25 +4,14 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import nodemailer from "nodemailer";
 import {
-  handleUpload,
-  runMiddleware,
-  cloudinary,
-} from "../utils/cloudinaryConfig.js";
-import {
   addUser,
-  deleteUserAccount,
-  getProfilePic,
   getToken,
   getUser,
-  updateProfilePic,
   updateResetPasswordToken,
-  updateUser,
-  updateUserPassword,
   updateUserResetToken,
 } from "../prisma/userQueries.js";
 import { passport } from "../utils/passportConfig.js";
 import jwt from "jsonwebtoken";
-import { upload } from "../utils/multerConfig.js";
 
 const registerFormValidation = [
   body("firstname").notEmpty().withMessage("First name can't be empty"),
@@ -53,25 +42,6 @@ const loginFormValidation = [
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
-];
-
-const passwordFormValidation = [
-  body("password")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("newpassword")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long"),
-  body("confirmnewpassword")
-    .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters long")
-    .bail()
-    .custom((value, { req }) => {
-      if (value !== req.body.newpassword) {
-        throw new Error("Password and confirm password do not match");
-      }
-      return true;
-    }),
 ];
 
 const registerUser = [
@@ -127,97 +97,6 @@ const loginUser = [
   }),
 ];
 
-const getUserProfile = expressAsyncHandler(async (req, res) => {
-  const user = await getUser(req.params.id);
-  if (user) {
-    return res.status(200).json(user);
-  }
-  return res.status(404).json({ error: "user not found" });
-});
-
-const updateUserProfile = expressAsyncHandler(async (req, res) => {
-  const { id } = req.user;
-  const { firstname, lastname, username, email, bio } = req.body;
-  const user = await updateUser(id, firstname, lastname, username, email, bio);
-  if (user) {
-    return res.status(200).json(user);
-  }
-  return res.status(400).json({ error: "failed to update user" });
-});
-
-const changePassword = [
-  passwordFormValidation,
-  expressAsyncHandler(async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: errors.array() });
-    }
-    const { id } = req.user;
-    const user = await getUser(id);
-    const { password } = req.body;
-    const match = await bcrypt.compare(password, user.password);
-    if (match) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const user = await updateUserPassword(id, hashedPassword);
-      return res.status(200).json(user);
-    }
-    return res.status(400).json({ error: "incorrect password" });
-  }),
-];
-
-const deleteUser = async (req, res) => {
-  const { id } = req.user;
-  const user = await deleteUserAccount(id);
-  if (user) {
-    return res.status(200).json(user);
-  }
-  return res.status(400).json({ error: "failed to delete" });
-};
-
-const deletePhoto = async (id, publicId) => {
-  const result = await cloudinary.uploader.destroy(publicId);
-  console.log(result);
-  if (result.result === "ok") {
-    console.log("successfully deleted from cloudinary");
-    const user = await updateProfilePic(id, null, null);
-  }
-};
-
-const uploadPhoto = async (req, res) => {
-  try {
-    const profilePic = await getProfilePic(req.params.id);
-    if (profilePic) {
-      await deletePhoto(req.params.id, profilePic.public_id);
-    }
-    await runMiddleware(req, res, upload.single("profilepic"));
-    const b64 = Buffer.from(req.file.buffer).toString("base64");
-    let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI, req.params.id);
-    console.log("cldRes", cldRes);
-    const user = await updateProfilePic(
-      req.params.id,
-      cldRes.secure_url,
-      cldRes.public_id
-    );
-    return res.status(200).json(cldRes);
-  } catch (error) {
-    console.log(error);
-    return res.status(400).json({
-      error: error.message,
-    });
-  }
-};
-
-const deleteUserProfilePic = async (req, res) => {
-  const profilePic = await getProfilePic(req.params.id);
-  if (profilePic) {
-    await deletePhoto(req.params.id, profilePic.public_id);
-    const user = await updateProfilePic(req.params.id, null, null);
-    return res.status(200).json(user);
-  }
-  return res.status(400).json({ error: "no profile pic to delete" });
-};
-
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
@@ -238,7 +117,7 @@ const forgotPassword = async (req, res) => {
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS, 
+        pass: process.env.EMAIL_PASS,
       },
     });
 
@@ -281,15 +160,4 @@ const resetPassword = async (req, res) => {
   }
 };
 
-export {
-  registerUser,
-  loginUser,
-  getUserProfile,
-  updateUserProfile,
-  changePassword,
-  deleteUser,
-  uploadPhoto,
-  deleteUserProfilePic,
-  forgotPassword,
-  resetPassword,
-};
+export { registerUser, loginUser, forgotPassword, resetPassword };
