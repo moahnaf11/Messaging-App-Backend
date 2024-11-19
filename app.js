@@ -13,7 +13,7 @@ app.use("/users", userRouter);
 app.use("/profile", profileRouter);
 
 app.use((err, req, res, next) => {
-  console.log(err);
+  console.log("ERROR", err);
   const statusCode = err.status || 500;
   res
     .status(statusCode)

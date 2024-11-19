@@ -6,6 +6,9 @@ const getUser = async (username = null, id = null, email = null) => {
       where: {
         username: username,
       },
+      include: {
+        media: true,
+      },
     });
     console.log("get user", user);
     return user;
@@ -14,6 +17,9 @@ const getUser = async (username = null, id = null, email = null) => {
       where: {
         id: id,
       },
+      include: {
+        media: true,
+      },
     });
     console.log("get user", user);
     return user;
@@ -21,6 +27,9 @@ const getUser = async (username = null, id = null, email = null) => {
     const user = await prisma.user.findUnique({
       where: {
         email: email,
+      },
+      include: {
+        media: true,
       },
     });
     console.log("get user", user);

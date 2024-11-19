@@ -80,6 +80,7 @@ model Message {
 // Media Model (for images/videos storage)
 model Media {
   id           String   @id @default(uuid())
+  public_id    String
   url          String // URL of the media file
   type         String // "image", "video"
   uploadedById String
@@ -87,7 +88,7 @@ model Media {
 
   // Relation to the user who uploaded
   uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
-  message    Message[] 
+  message    Message[]
 
   @@map("medias")
 }

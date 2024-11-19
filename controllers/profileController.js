@@ -56,7 +56,7 @@ const deletePhoto = async (id, publicId) => {
   const result = await cloudinary.uploader.destroy(publicId);
   console.log(result);
   if (result.result === "ok") {
-    console.log("successfully deleted from cloudinary");
+    console.log("successfully deleted profile photo from cloudinary");
     const user = await updateProfilePic(id, null, null);
   }
 };
@@ -104,13 +104,64 @@ const updateUserProfile = expressAsyncHandler(async (req, res) => {
   return res.status(400).json({ error: "failed to update user" });
 });
 
+// deleting images from cloudinary
+const deleteImageFromCloudinary = async (imgArray) => {
+  const result = await cloudinary.api.delete_resources(imgArray);
+  console.log("deleting images from cloudinary", result);
+};
+
+// deleting videos from cloudinary
+const deleteVideoFromCloudinary = async (videoArray) => {
+  const result = await cloudinary.api.delete_resources(videoArray, {
+    resource_type: "video",
+  });
+  console.log("deleting videos from cloudinary", result);
+};
+
+// deleting raw files from cloudinary
+const deleteRawFromCloudinary = async (rawArray) => {
+  const result = await cloudinary.api.delete_resources(rawArray, {
+    resource_type: "raw",
+  });
+  console.log("deleting raw files from cloudinary", result);
+};
+
 const deleteUser = async (req, res) => {
   const { id } = req.user;
+  const userMedia = await getUser(null, id);
+  // delete user profile photo from cloudinary if exists
+  if (userMedia.public_id) {
+    const result = await cloudinary.uploader.destroy(userMedia.public_id);
+    console.log(result);
+    if (result.result === "ok") {
+      console.log("successfully deleted profile photo from cloudinary");
+    }
+  }
+  // filter all images and videos anw raw files by resource type
+  const imgArray = userMedia.media
+    .filter((media) => media.type === "image")
+    .map((media) => media.public_id);
+
+  const videoArray = userMedia.media
+    .filter((media) => media.type === "video")
+    .map((media) => media.public_id);
+
+  const rawArray = userMedia.media
+    .filter((media) => media.type !== "image" && media.type !== "video")
+    .map((media) => media.public_id);
+  await Promise.all([
+    imgArray.length ? deleteImageFromCloudinary(imgArray) : Promise.resolve(),
+    videoArray.length
+      ? deleteVideoFromCloudinary(videoArray)
+      : Promise.resolve(),
+    rawArray.length ? deleteRawFromCloudinary(rawArray) : Promise.resolve(),
+  ]);
+
   const user = await deleteUserAccount(id);
   if (user) {
     return res.status(200).json(user);
   }
-  return res.status(400).json({ error: "failed to delete" });
+  return res.status(400).json({ error: "failed to delete user record" });
 };
 
 const deleteUserProfilePic = async (req, res) => {
