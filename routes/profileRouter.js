@@ -7,6 +7,7 @@ import {
   updateUserProfile,
   uploadPhoto,
   deleteUserProfilePic,
+  updateOnlineStatus,
 } from "../controllers/profileController.js";
 const profileRouter = Router();
 
@@ -17,6 +18,7 @@ profileRouter.delete(
   authenticateToken,
   deleteUserProfilePic
 );
+profileRouter.put("/:id/online-status", authenticateToken, updateOnlineStatus);
 profileRouter.get("/:id", authenticateToken, getUserProfile);
 profileRouter.put("/:id", authenticateToken, updateUserProfile);
 profileRouter.delete("/:id", authenticateToken, deleteUser);

@@ -66,4 +66,25 @@ const deleteUserAccount = async (id) => {
   return user;
 };
 
-export { updateProfilePic, getProfilePic, updateUserPassword, updateUser, deleteUserAccount };
+const updateOnline = async (id, onlineStatus) => {
+  const user = await prisma.user.update({
+    where: {
+      id: id,
+    },
+    data: {
+      online: onlineStatus,
+    },
+  });
+
+  console.log("updated user online status");
+  return user;
+};
+
+export {
+  updateProfilePic,
+  getProfilePic,
+  updateUserPassword,
+  updateUser,
+  deleteUserAccount,
+  updateOnline,
+};

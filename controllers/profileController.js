@@ -174,6 +174,15 @@ const deleteUserProfilePic = async (req, res) => {
   return res.status(400).json({ error: "no profile pic to delete" });
 };
 
+const updateOnlineStatus = async (req, res) => {
+  const onlineStatus = req.body.online;
+  const user = await updateOnlineStatus(req.params.id, onlineStatus);
+  if (user) {
+    return res.status(200).json(user);
+  }
+  return res.status(400).json({ error: "failed to update user status" });
+};
+
 export {
   changePassword,
   uploadPhoto,
@@ -181,4 +190,5 @@ export {
   updateUserProfile,
   deleteUser,
   deleteUserProfilePic,
+  updateOnlineStatus
 };
