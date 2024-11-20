@@ -133,10 +133,10 @@ const forgotPassword = async (req, res) => {
              <p>Here is your reset token please provide this in the token field ${resetToken}</p>`,
     });
 
-    res.status(200).json({ message: "Password reset email sent" });
+    return res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 };
 
