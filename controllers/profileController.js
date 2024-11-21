@@ -4,10 +4,17 @@ import { handleUpload, runMiddleware } from "../utils/cloudinaryConfig.js";
 import expressAsyncHandler from "express-async-handler";
 import bcrypt from "bcryptjs";
 import {
+  deletePhoto,
+  deleteImageFromCloudinary,
+  deleteRawFromCloudinary,
+  deleteVideoFromCloudinary,
+} from "../utils/helperfunctions.js";
+import {
   getProfilePic,
   updateProfilePic,
   updateUserPassword,
   updateUser,
+  updateOnline,
   deleteUserAccount,
 } from "../prisma/profileQueries.js";
 import { getUser } from "../prisma/userQueries.js";
@@ -57,15 +64,6 @@ const changePassword = [
   }),
 ];
 
-const deletePhoto = async (id, publicId) => {
-  const result = await cloudinary.uploader.destroy(publicId);
-  console.log(result);
-  if (result.result === "ok") {
-    console.log("successfully deleted profile photo from cloudinary");
-    const user = await updateProfilePic(id, null, null);
-  }
-};
-
 const uploadPhoto = async (req, res) => {
   try {
     const profilePic = await getProfilePic(req.params.id);
@@ -108,28 +106,6 @@ const updateUserProfile = expressAsyncHandler(async (req, res) => {
   }
   return res.status(400).json({ error: "failed to update user" });
 });
-
-// deleting images from cloudinary
-const deleteImageFromCloudinary = async (imgArray) => {
-  const result = await cloudinary.api.delete_resources(imgArray);
-  console.log("deleting images from cloudinary", result);
-};
-
-// deleting videos from cloudinary
-const deleteVideoFromCloudinary = async (videoArray) => {
-  const result = await cloudinary.api.delete_resources(videoArray, {
-    resource_type: "video",
-  });
-  console.log("deleting videos from cloudinary", result);
-};
-
-// deleting raw files from cloudinary
-const deleteRawFromCloudinary = async (rawArray) => {
-  const result = await cloudinary.api.delete_resources(rawArray, {
-    resource_type: "raw",
-  });
-  console.log("deleting raw files from cloudinary", result);
-};
 
 const deleteUser = async (req, res) => {
   const { id } = req.user;
@@ -176,12 +152,12 @@ const deleteUserProfilePic = async (req, res) => {
     const user = await updateProfilePic(req.params.id, null, null);
     return res.status(200).json(user);
   }
-  return res.status(400).json({ error: "no profile pic to delete" });
+  return res.status(404).json({ error: "no profile pic to delete" });
 };
 
 const updateOnlineStatus = async (req, res) => {
   const onlineStatus = req.body.online;
-  const user = await updateOnlineStatus(req.params.id, onlineStatus);
+  const user = await updateOnline(req.params.id, onlineStatus);
   if (user) {
     return res.status(200).json(user);
   }
