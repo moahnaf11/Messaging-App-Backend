@@ -41,6 +41,11 @@ const changePassword = [
     }
     const { id } = req.user;
     const user = await getUser(null, id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: "couldnt change password, user does not exist" });
+    }
     const { password, newpassword } = req.body;
     const match = await bcrypt.compare(password, user.password);
     if (match) {
@@ -190,5 +195,5 @@ export {
   updateUserProfile,
   deleteUser,
   deleteUserProfilePic,
-  updateOnlineStatus
+  updateOnlineStatus,
 };
