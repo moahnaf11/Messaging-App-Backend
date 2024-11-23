@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/users", userRouter);
 app.use("/profile", profileRouter);
-app.use("friend", friendRouter);
+app.use("/friend", friendRouter);
 
 app.use((err, req, res, next) => {
   console.log("ERROR", err);

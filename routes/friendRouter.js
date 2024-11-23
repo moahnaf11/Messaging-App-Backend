@@ -2,13 +2,15 @@ import { Router } from "express";
 import { authenticateToken } from "../utils/authenticateToken.js";
 import {
   acceptRejectRequest,
+  blockUser,
   deleteFriendRequest,
+  getAllFriends,
   getAllRequests,
   postRequest,
 } from "../controllers/friendController.js";
 const friendRouter = Router();
 
-friendRouter.get("/", authenticateToken, getAllRequests);
+friendRouter.get("/", authenticateToken, getAllFriends);
 friendRouter
   .route("/request")
   .post(authenticateToken, postRequest)
@@ -16,11 +18,9 @@ friendRouter
 
 friendRouter.put("/request/:id", authenticateToken, acceptRejectRequest);
 friendRouter.delete("/request/:id", authenticateToken, deleteFriendRequest);
-friendRouter.put("/request/block/:id", authenticateToken);
+friendRouter.put("/request/block/:id", authenticateToken, blockUser);
 
 export { friendRouter };
-
-
 
 /*
 Send a Friend Request:
@@ -46,4 +46,3 @@ Check Friendship Status:
 A user can check their relationship with another user using GET /friends/status/:id.
 
 */
- 

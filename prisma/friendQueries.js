@@ -79,7 +79,7 @@ const updateRequestStatus = async (id, handleRequest) => {
       },
     },
   });
-  console.log("updatded friend status", friend);
+  console.log("updated friend status", friend);
   return friend;
 };
 
