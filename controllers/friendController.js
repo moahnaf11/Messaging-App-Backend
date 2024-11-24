@@ -61,6 +61,7 @@ const deleteFriendRequest = async (req, res) => {
 
 const blockUser = async (req, res) => {
   const id = req.params.id;
+  const userId = req.user.id;
   const validData = ["blocked", "accepted"];
   const { handleBlock } = req.body;
   if (!validData.includes(handleBlock)) {
@@ -68,7 +69,14 @@ const blockUser = async (req, res) => {
       error: "incorrect data type for handleBlock variable",
     });
   }
-  const friend = await handleBlockUser(id, handleBlock);
+  if (handleBlock === "blocked") {
+    const friend = await handleBlockUser(id, userId, handleBlock);
+    if (friend) {
+      return res.status(200).json(friend);
+    }
+  }
+
+  const friend = await handleBlockUser(id, null, handleBlock);
   if (friend) {
     return res.status(200).json(friend);
   }

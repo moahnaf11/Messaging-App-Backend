@@ -111,13 +111,14 @@ const cancelRequest = async (id) => {
   return friend;
 };
 
-const handleBlockUser = async (id, handleBlock) => {
+const handleBlockUser = async (id, userId, handleBlock) => {
   const friend = await prisma.friend.update({
     where: {
       id: id,
     },
     data: {
       status: handleBlock,
+      blocker_id: userId,
     },
     include: {
       requestee: {
@@ -148,5 +149,5 @@ export {
   updateRequestStatus,
   cancelRequest,
   handleBlockUser,
-  getFriends
+  getFriends,
 };

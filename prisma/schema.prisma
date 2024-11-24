@@ -49,6 +49,7 @@ model Friend {
   requesteeId String
   status      String   @default("pending") // "pending", "accepted", "rejected", "blocked"
   createdAt   DateTime @default(now())
+  blocker_id  String?
 
   // Relations to users
   requester User @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
