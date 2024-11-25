@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
+import { v4 as uuidv4 } from "uuid";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,7 +11,7 @@ async function handleUpload(file, id, folder) {
   const res = await cloudinary.uploader.upload(file, {
     resource_type: "auto",
     folder: folder,
-    public_id: id,
+    public_id: id || uuidv4(),
   });
   return res;
 }
@@ -25,7 +26,5 @@ function runMiddleware(req, res, fn) {
     });
   });
 }
-
-
 
 export { cloudinary, runMiddleware, handleUpload };

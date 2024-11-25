@@ -88,10 +88,10 @@ model Media {
 
   // Relation to the user who uploaded
   uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
-  messageId  String? // Optional for unlinked media
+  messageId  String // Optional for unlinked media
 
   // Relation to Message
-  message Message? @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@map("medias")
 }
