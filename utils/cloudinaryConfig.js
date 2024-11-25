@@ -6,10 +6,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-async function handleUpload(file, id) {
+async function handleUpload(file, id, folder) {
   const res = await cloudinary.uploader.upload(file, {
     resource_type: "auto",
-    folder: "profilepic",
+    folder: folder,
     public_id: id,
   });
   return res;

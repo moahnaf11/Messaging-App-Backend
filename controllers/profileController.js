@@ -73,7 +73,7 @@ const uploadPhoto = async (req, res) => {
     await runMiddleware(req, res, upload.single("profilepic"));
     const b64 = Buffer.from(req.file.buffer).toString("base64");
     let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-    const cldRes = await handleUpload(dataURI, req.params.id);
+    const cldRes = await handleUpload(dataURI, req.params.id, "profilepic");
     console.log("cldRes", cldRes);
     const user = await updateProfilePic(
       req.params.id,
