@@ -5,7 +5,7 @@ import {
 import { runMiddleware, handleUpload } from "../utils/cloudinaryConfig.js";
 import { multipleUpload } from "../utils/multerConfig.js";
 
-const postMessage = async (req, res) => {
+const postMediaMessage = async (req, res) => {
   const { id } = req.user;
   const { receiverId, content } = req.body;
   if (!id || !receiverId) {
@@ -33,11 +33,19 @@ const postMessage = async (req, res) => {
     );
 
     return res.status(200).json(message);
-  } else {
-    // no files just text added to database
-    const message = await uploadMessage(id, receiverId, content);
-    return res.status(200).json(message);
   }
 };
 
-export { postMessage };
+const postMessage = async (req, res) => {
+  const { id } = req.user;
+  const { receiverId, content } = req.body;
+  if (!id || !receiverId) {
+    return res
+      .status(400)
+      .json({ error: "Sender and receiver IDs are required." });
+  }
+  const message = await uploadMessage(id, receiverId, content);
+  return res.status(200).json(message);
+};
+
+export { postMediaMessage, postMessage };

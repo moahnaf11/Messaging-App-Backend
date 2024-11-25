@@ -64,14 +64,13 @@ model Message {
   senderId   String
   receiverId String
   content    String? // Text content of the message
-  type       String   @default("text") // "text", "image", "video"
   timestamp  DateTime @default(now())
 
   // Relations to users
   sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
-  // Relation to Media (optional)
+  // Relation to Media
   media Media[]
 
   @@map("messages")
@@ -87,8 +86,8 @@ model Media {
   uploadedAt   DateTime @default(now())
 
   // Relation to the user who uploaded
-  uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
-  messageId  String // Optional for unlinked media
+  uploadedBy User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  messageId  String @unique
 
   // Relation to Message
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
