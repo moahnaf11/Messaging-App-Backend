@@ -36,9 +36,57 @@ const uploadMessage = async (id, receiverId, content) => {
       senderId: id,
       receiverId: receiverId,
     },
+    include: {
+      media: true,
+    },
   });
   console.log("message with no media", message);
   return message;
 };
 
-export { uploadMessageWithMedia, uploadMessage };
+const getMessage = async (id) => {
+  const message = await prisma.message.findUnique({
+    where: {
+      id: id,
+    },
+    include: {
+      media: true,
+    },
+  });
+  console.log("found message", message);
+  return message;
+};
+
+const delMessage = async (id) => {
+  const message = await prisma.message.delete({
+    where: {
+      id: id,
+    },
+  });
+  console.log("deleted message", message);
+  return message;
+};
+
+const editMessage = async (id, content) => {
+  const message = await prisma.message.update({
+    where: {
+      id: id,
+    },
+    data: {
+      content: content,
+    },
+    include: {
+      media: true,
+    },
+  });
+  console.log("updated message", message);
+  return message;
+};
+
+export {
+  uploadMessageWithMedia,
+  uploadMessage,
+  delMessage,
+  getMessage,
+  editMessage,
+};

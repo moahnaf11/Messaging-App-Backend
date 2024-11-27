@@ -1,20 +1,57 @@
 import {
+  delMessage,
+  editMessage,
+  getMessage,
   uploadMessage,
   uploadMessageWithMedia,
 } from "../prisma/messageQueries.js";
 import { runMiddleware, handleUpload } from "../utils/cloudinaryConfig.js";
+import {
+  deleteImageFromCloudinary,
+  deleteRawFromCloudinary,
+  deleteVideoFromCloudinary,
+} from "../utils/helperfunctions.js";
 import { multipleUpload } from "../utils/multerConfig.js";
+import multer from "multer";
 
 const postMediaMessage = async (req, res) => {
   const { id } = req.user;
-  const { receiverId, content } = req.body;
-  if (!id || !receiverId) {
-    return res
-      .status(400)
-      .json({ error: "Sender and receiver IDs are required." });
+  // catch multer errors
+  try {
+    await runMiddleware(req, res, multipleUpload.array("media", 5));
+  } catch (err) {
+    if (err instanceof multer.MulterError) {
+      // Handle Multer-specific errors
+      switch (err.code) {
+        case "LIMIT_FILE_SIZE":
+          return res
+            .status(400)
+            .json({ error: "File size exceeds the limit of 2MB." });
+        case "LIMIT_FILE_COUNT":
+          return res
+            .status(400)
+            .json({ error: "You can only upload up to 5 files." });
+        default:
+          return res
+            .status(400)
+            .json({ error: `Multer error: ${err.message}` });
+      }
+    } else if (
+      err.message ===
+      "Invalid file type. Only JPEG, JPG, PNG, MP4, PDF and DOCX allowed"
+      
+    ) {
+      // Handle custom file type errors
+      return res.status(400).json({ error: err.message });
+    }
   }
-  await runMiddleware(req, res, multipleUpload.array("media", 5));
   if (req.files && req.files.length) {
+    const { receiverId, content } = req.body;
+    if (!id || !receiverId) {
+      return res
+        .status(400)
+        .json({ error: "Sender and receiver IDs are required." });
+    }
     const uploadedMedia = [];
     for (const file of req.files) {
       const b64 = Buffer.from(file.buffer).toString("base64");
@@ -48,4 +85,40 @@ const postMessage = async (req, res) => {
   return res.status(200).json(message);
 };
 
-export { postMediaMessage, postMessage };
+const deleteMessage = async (req, res) => {
+  const { messageId } = req.params;
+  const message = await getMessage(messageId);
+  if (message.media.length) {
+    const imgArray = message.media
+      .filter((file) => file.type === "image")
+      .map((file) => file.public_id);
+    const vidArray = message.media
+      .filter((file) => file.type === "video")
+      .map((file) => file.public_id);
+    const rawArray = message.media
+      .filter((file) => file.type === "raw")
+      .map((file) => file.public_id);
+
+    await Promise.all([
+      imgArray.length ? deleteImageFromCloudinary(imgArray) : Promise.resolve(),
+      vidArray.length ? deleteVideoFromCloudinary(vidArray) : Promise.resolve(),
+      rawArray.length ? deleteRawFromCloudinary(rawArray) : Promise.resolve(),
+    ]);
+    const deletedMessage = await delMessage(messageId);
+    return res.status(200).json(deletedMessage);
+  }
+  const deletedMessage = await delMessage(messageId);
+  return res.status(200).json(deletedMessage);
+};
+
+const updateMessage = async (req, res) => {
+  const { messageId } = req.params;
+  const { content } = req.body;
+  const message = await editMessage(messageId, content);
+  if (message) {
+    return res.status(200).json(message);
+  }
+  return res.status(400).json({ error: "failed to edit message" });
+};
+
+export { postMediaMessage, postMessage, deleteMessage, updateMessage };

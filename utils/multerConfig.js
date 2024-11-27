@@ -11,17 +11,25 @@ const fileFilter = (req, file, cb) => {
 };
 
 const multipleFileFilter = (req, file, cb) => {
+  console.log("File received:", file);
   const allowedMimeTypes = [
     "image/jpeg",
     "image/png",
     "image/jpg",
     "video/mp4",
+    "application/pdf", // PDF files
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // word document
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true); // Accept the file
   } else {
-    cb(new Error("Invalid file type. Only JPEG, JPG, PNG, MP4 allowed"), false); // Reject the file
+    cb(
+      new Error(
+        "Invalid file type. Only JPEG, JPG, PNG, MP4, PDF and DOCX allowed"
+      ),
+      false
+    ); // Reject the file
   }
 };
 

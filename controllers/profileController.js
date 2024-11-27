@@ -70,7 +70,33 @@ const uploadPhoto = async (req, res) => {
     if (profilePic) {
       await deletePhoto(req.params.id, profilePic.public_id);
     }
-    await runMiddleware(req, res, upload.single("profilepic"));
+    // catch multer error
+    try {
+      await runMiddleware(req, res, upload.single("profilepic"));
+    } catch (err) {
+      if (err instanceof multer.MulterError) {
+        // Handle Multer-specific errors
+        switch (err.code) {
+          case "LIMIT_FILE_SIZE":
+            return res
+              .status(400)
+              .json({ error: "File size exceeds the limit of 2MB." });
+          case "LIMIT_FILE_COUNT":
+            return res
+              .status(400)
+              .json({ error: "You can only upload 1 file" });
+          default:
+            return res
+              .status(400)
+              .json({ error: `Multer error: ${err.message}` });
+        }
+      } else if (
+        err.message === "Invalid file type. Only JPEG, JPG, PNG allowed"
+      ) {
+        return res.status(400).json({ error: err.message });
+      }
+    }
+
     const b64 = Buffer.from(req.file.buffer).toString("base64");
     let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
     const cldRes = await handleUpload(dataURI, req.params.id, "profilepic");

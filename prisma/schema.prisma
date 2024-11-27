@@ -65,6 +65,7 @@ model Message {
   receiverId String
   content    String? // Text content of the message
   timestamp  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations to users
   sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
@@ -87,7 +88,7 @@ model Media {
 
   // Relation to the user who uploaded
   uploadedBy User   @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
-  messageId  String @unique
+  messageId  String
 
   // Relation to Message
   message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
