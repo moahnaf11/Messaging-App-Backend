@@ -1,4 +1,5 @@
 import { cloudinary } from "./cloudinaryConfig.js";
+import { updateProfilePic } from "../prisma/profileQueries.js";
 
 const deletePhoto = async (id, publicId) => {
   const result = await cloudinary.uploader.destroy(publicId);

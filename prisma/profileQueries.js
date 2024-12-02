@@ -23,6 +23,7 @@ const updateProfilePic = async (id, url, publicId) => {
     },
   });
   console.log("updated user profile picture", user);
+  return user;
 };
 
 const updateUserPassword = async (id, hashedPassword) => {

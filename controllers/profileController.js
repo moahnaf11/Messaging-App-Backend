@@ -19,6 +19,7 @@ import {
 } from "../prisma/profileQueries.js";
 import { getUser } from "../prisma/userQueries.js";
 import { cloudinary } from "../utils/cloudinaryConfig.js";
+import multer from "multer";
 
 const passwordFormValidation = [
   body("password")
@@ -96,7 +97,10 @@ const uploadPhoto = async (req, res) => {
         return res.status(400).json({ error: err.message });
       }
     }
-
+    console.log(req.file);
+    if (!req.file) {
+      return res.status(400).json({ error: "No file was provided" });
+    }
     const b64 = Buffer.from(req.file.buffer).toString("base64");
     let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
     const cldRes = await handleUpload(dataURI, req.params.id, "profilepic");
@@ -106,7 +110,7 @@ const uploadPhoto = async (req, res) => {
       cldRes.secure_url,
       cldRes.public_id
     );
-    return res.status(200).json(cldRes);
+    return res.status(200).json(user);
   } catch (error) {
     console.log(error);
     return res.status(400).json({
