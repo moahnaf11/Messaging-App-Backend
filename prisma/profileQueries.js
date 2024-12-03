@@ -77,7 +77,7 @@ const updateOnline = async (id, onlineStatus) => {
     },
   });
 
-  console.log("updated user online status");
+  console.log("updated user online status", user);
   return user;
 };
 
