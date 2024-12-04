@@ -6,6 +6,7 @@ import {
   sendPostFriendRequest,
   updateRequestStatus,
 } from "../prisma/friendQueries.js";
+import { getUser } from "../prisma/userQueries.js";
 
 const getAllFriends = async (req, res) => {
   const { id } = req.user;
@@ -18,8 +19,12 @@ const getAllFriends = async (req, res) => {
 
 const postRequest = async (req, res) => {
   const { id } = req.user;
-  const { requesteeId } = req.body;
-  const friend = await sendPostFriendRequest(id, requesteeId);
+  const { username } = req.body;
+  const user = await getUser(username);
+  if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+  const friend = await sendPostFriendRequest(id, user.id);
   if (friend) {
     return res.status(201).json(friend);
   }

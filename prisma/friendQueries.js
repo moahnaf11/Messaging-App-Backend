@@ -99,6 +99,15 @@ const getRequests = async (id) => {
 };
 
 const updateRequestStatus = async (id, handleRequest) => {
+  if (handleRequest === "rejected") {
+    const friend = await prisma.friend.delete({
+      where: {
+        id: id,
+      },
+    });
+    console.log("rejected friend request and deleted it!", friend);
+    return friend;
+  }
   const friend = await prisma.friend.update({
     where: {
       id: id,
