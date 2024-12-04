@@ -2,18 +2,26 @@ import { prisma } from "./prismaClient.js";
 
 const getFriends = async (id) => {
   const friends = await prisma.friend.findMany({
-    where: {
-      OR: [
-        { requesteeId: id, status: "accepted" },
-        { requesterId: id, status: "accepted" },
-      ],
-    },
     include: {
       requestee: {
-        select: { id: true, firstname: true, lastname: true, username: true },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        },
       },
       requester: {
-        select: { id: true, firstname: true, lastname: true, username: true },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        },
       },
     },
   });
@@ -29,10 +37,24 @@ const sendPostFriendRequest = async (id, requesteeId) => {
     },
     include: {
       requestee: {
-        select: { id: true, firstname: true, lastname: true, username: true },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        },
       },
       requester: {
-        select: { id: true, firstname: true, lastname: true, username: true },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        },
       },
     },
   });
@@ -50,10 +72,24 @@ const getRequests = async (id) => {
     },
     include: {
       requester: {
-        select: { id: true, firstname: true, lastname: true, username: true }, // Customize returned fields
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        }, // Customize returned fields
       },
       requestee: {
-        select: { id: true, firstname: true, lastname: true, username: true }, // Customize returned fields
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        }, // Customize returned fields
       },
     },
   });
@@ -72,10 +108,24 @@ const updateRequestStatus = async (id, handleRequest) => {
     },
     include: {
       requestee: {
-        select: { id: true, firstname: true, lastname: true, username: true },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        },
       },
       requester: {
-        select: { id: true, firstname: true, lastname: true, username: true },
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+        },
       },
     },
   });
@@ -95,6 +145,8 @@ const cancelRequest = async (id) => {
           firstname: true,
           lastname: true,
           username: true,
+          profilePicture: true,
+          online: true,
         },
       },
       requester: {
@@ -103,6 +155,8 @@ const cancelRequest = async (id) => {
           firstname: true,
           lastname: true,
           username: true,
+          profilePicture: true,
+          online: true,
         },
       },
     },
@@ -127,6 +181,8 @@ const handleBlockUser = async (id, userId, handleBlock) => {
           firstname: true,
           lastname: true,
           username: true,
+          profilePicture: true,
+          online: true,
         },
       },
       requester: {
@@ -135,6 +191,8 @@ const handleBlockUser = async (id, userId, handleBlock) => {
           firstname: true,
           lastname: true,
           username: true,
+          profilePicture: true,
+          online: true,
         },
       },
     },
