@@ -17,11 +17,11 @@ import multer from "multer";
 
 const getFriendMessages = async (req, res) => {
   const { friendId } = req.params;
-  const messages = await getMessagesByFriendId(friendId);
+  const { messages, friend } = await getMessagesByFriendId(friendId);
   if (!messages.length) {
-    return res.status(404).json({ error: "no messages found" });
+    return res.status(404).json({ error: "no messages found", friend });
   }
-  return res.status(200).json(messages);
+  return res.status(200).json({ messages, friend });
 };
 
 const postMediaMessage = async (req, res) => {

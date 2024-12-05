@@ -4,14 +4,14 @@ const getMessagesByFriendId = async (friendId) => {
   // Find the friend relationship
   const friend = await prisma.friend.findUnique({
     where: { id: friendId },
-    select: {
-      requesterId: true,
-      requesteeId: true,
+    include: {
+      requester: true,
+      requestee: true,
     },
   });
 
   if (!friend) {
-    return [];
+    return { messages: [], friend };
   }
 
   const { requesterId, requesteeId } = friend;
@@ -30,7 +30,7 @@ const getMessagesByFriendId = async (friendId) => {
     },
   });
 
-  return messages;
+  return { messages, friend };
 };
 
 const uploadMessageWithMedia = async (
