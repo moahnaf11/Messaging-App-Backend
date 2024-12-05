@@ -2,6 +2,7 @@ import {
   delMessage,
   editMessage,
   getMessage,
+  getMessagesByFriendId,
   uploadMessage,
   uploadMessageWithMedia,
 } from "../prisma/messageQueries.js";
@@ -13,6 +14,15 @@ import {
 } from "../utils/helperfunctions.js";
 import { multipleUpload } from "../utils/multerConfig.js";
 import multer from "multer";
+
+const getFriendMessages = async (req, res) => {
+  const { friendId } = req.params;
+  const messages = await getMessagesByFriendId(friendId);
+  if (!messages.length) {
+    return res.status(404).json({ error: "no messages found" });
+  }
+  return res.status(200).json(messages);
+};
 
 const postMediaMessage = async (req, res) => {
   const { id } = req.user;
@@ -39,7 +49,6 @@ const postMediaMessage = async (req, res) => {
     } else if (
       err.message ===
       "Invalid file type. Only JPEG, JPG, PNG, MP4, PDF and DOCX allowed"
-      
     ) {
       // Handle custom file type errors
       return res.status(400).json({ error: err.message });
@@ -121,4 +130,10 @@ const updateMessage = async (req, res) => {
   return res.status(400).json({ error: "failed to edit message" });
 };
 
-export { postMediaMessage, postMessage, deleteMessage, updateMessage };
+export {
+  postMediaMessage,
+  postMessage,
+  deleteMessage,
+  updateMessage,
+  getFriendMessages,
+};

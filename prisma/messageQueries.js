@@ -1,5 +1,38 @@
 import { prisma } from "./prismaClient.js";
 
+const getMessagesByFriendId = async (friendId) => {
+  // Find the friend relationship
+  const friend = await prisma.friend.findUnique({
+    where: { id: friendId },
+    select: {
+      requesterId: true,
+      requesteeId: true,
+    },
+  });
+
+  if (!friend) {
+    return [];
+  }
+
+  const { requesterId, requesteeId } = friend;
+
+  // Fetch messages between the requester and requestee
+  const messages = await prisma.message.findMany({
+    where: {
+      OR: [
+        { senderId: requesterId, receiverId: requesteeId },
+        { senderId: requesteeId, receiverId: requesterId },
+      ],
+    },
+    orderBy: { timestamp: "asc" }, // Order by timestamp
+    include: {
+      media: true, // Include media if needed
+    },
+  });
+
+  return messages;
+};
+
 const uploadMessageWithMedia = async (
   id,
   receiverId,
@@ -89,4 +122,5 @@ export {
   delMessage,
   getMessage,
   editMessage,
+  getMessagesByFriendId,
 };
