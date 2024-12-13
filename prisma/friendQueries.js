@@ -29,6 +29,19 @@ const getFriends = async (id) => {
   return friends;
 };
 
+const checkFriendRecord = async (id, userId) => {
+  const friend = await prisma.friend.findFirst({
+    where: {
+      OR: [
+        { requesteeId: id, requesterId: userId },
+        { requesterId: id, requesteeId: userId },
+      ],
+    },
+  });
+  console.log("friend record exists");
+  return friend;
+};
+
 const sendPostFriendRequest = async (id, requesteeId) => {
   const friend = await prisma.friend.create({
     data: {
@@ -217,4 +230,5 @@ export {
   cancelRequest,
   handleBlockUser,
   getFriends,
+  checkFriendRecord
 };

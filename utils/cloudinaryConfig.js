@@ -7,9 +7,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-async function handleUpload(file, id, folder) {
+async function handleUpload(file, id, folder, mimetype) {
   const res = await cloudinary.uploader.upload(file, {
-    resource_type: "auto",
+    resource_type: mimetype === "application/pdf" ? "raw" : "auto",
     folder: folder,
     public_id: id || uuidv4(),
   });

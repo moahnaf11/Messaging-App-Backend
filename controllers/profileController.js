@@ -130,6 +130,14 @@ const getUserProfile = expressAsyncHandler(async (req, res) => {
 const updateUserProfile = expressAsyncHandler(async (req, res) => {
   const { id } = req.user;
   const { firstname, lastname, username, email, bio } = req.body;
+  const userProf = await getUser(username);
+  if (userProf) {
+    return res.status(400).json({error: "Username already exists"})
+  }
+  const userEmail = await getUser(null, null, email);
+  if (userEmail) {
+    return res.status(400).json({error: "Email aready exists"})
+  }
   const user = await updateUser(id, firstname, lastname, username, email, bio);
   if (user) {
     return res.status(200).json(user);

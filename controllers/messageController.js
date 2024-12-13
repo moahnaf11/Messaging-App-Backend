@@ -65,7 +65,7 @@ const postMediaMessage = async (req, res) => {
     for (const file of req.files) {
       const b64 = Buffer.from(file.buffer).toString("base64");
       let dataURI = "data:" + file.mimetype + ";base64," + b64;
-      const cldRes = await handleUpload(dataURI, null, id);
+      const cldRes = await handleUpload(dataURI, null, id, file.mimetype);
       console.log("message file", cldRes);
       uploadedMedia.push(cldRes);
     }
@@ -79,6 +79,8 @@ const postMediaMessage = async (req, res) => {
     );
 
     return res.status(200).json(message);
+  } else if (!req.files || !req.files.length) {
+    return res.status(400).json({ error: "Please select a file to upload" });
   }
 };
 

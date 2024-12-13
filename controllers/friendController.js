@@ -1,5 +1,6 @@
 import {
   cancelRequest,
+  checkFriendRecord,
   getFriends,
   getRequests,
   handleBlockUser,
@@ -23,6 +24,17 @@ const postRequest = async (req, res) => {
   const user = await getUser(username);
   if (!user) {
     return res.status(404).json({ error: "User not found" });
+  }
+  const record = await checkFriendRecord(user.id, id);
+  if (record) {
+    if (record.status !== "blocked") {
+      return res.status(400).json({ error: "could not sent friend request" });
+    } else if (record.status === "blocked" && record.blocker_id !== id) {
+      return res
+        .status(400)
+        .json({ error: "You have been blocked by the user" });
+    }
+    return res.status(400).json({ error: "You have blocked this user" });
   }
   const friend = await sendPostFriendRequest(id, user.id);
   if (friend) {
