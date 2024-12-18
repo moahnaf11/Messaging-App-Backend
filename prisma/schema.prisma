@@ -25,7 +25,7 @@ model User {
   public_id            String?
   passwordResetToken   String? // Token for password reset
   passwordResetExpires DateTime? // Expiration time for the token
-  status               String? // User's status (e.g., "Hey there!")
+  status               String?  @default("I'm new to whispr")
   online               Boolean   @default(false) // Online/offline status
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt

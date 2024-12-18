@@ -58,6 +58,12 @@ const updateUser = async (id, firstname, lastname, username, email, bio) => {
 };
 
 const deleteUserAccount = async (id) => {
+  // // const friends = await prisma.friend.deleteMany({
+  // //   where: {
+  // //     OR: [{ requesterId: id }, { requesteeId: id }],
+  // //   },
+  // // });
+  // console.log("deleted all friend records where deleted user exists", friends);
   const user = await prisma.user.delete({
     where: {
       id: id,

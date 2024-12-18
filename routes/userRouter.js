@@ -6,7 +6,6 @@ import {
   resetPassword,
 } from "../controllers/userController.js";
 const userRouter = Router();
-
 userRouter.post("/register", registerUser);
 userRouter.post("/login", loginUser);
 userRouter.post("/forgot-password", forgotPassword);

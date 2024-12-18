@@ -11,6 +11,7 @@ const getFriends = async (id) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
       requester: {
@@ -21,6 +22,7 @@ const getFriends = async (id) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
     },
@@ -38,7 +40,7 @@ const checkFriendRecord = async (id, userId) => {
       ],
     },
   });
-  console.log("friend record exists");
+  console.log("friend record exists", friend);
   return friend;
 };
 
@@ -57,6 +59,7 @@ const sendPostFriendRequest = async (id, requesteeId) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
       requester: {
@@ -67,6 +70,7 @@ const sendPostFriendRequest = async (id, requesteeId) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
     },
@@ -92,6 +96,7 @@ const getRequests = async (id) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         }, // Customize returned fields
       },
       requestee: {
@@ -102,6 +107,7 @@ const getRequests = async (id) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         }, // Customize returned fields
       },
     },
@@ -137,6 +143,7 @@ const updateRequestStatus = async (id, handleRequest) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
       requester: {
@@ -147,6 +154,7 @@ const updateRequestStatus = async (id, handleRequest) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
     },
@@ -169,6 +177,7 @@ const cancelRequest = async (id) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
       requester: {
@@ -179,6 +188,7 @@ const cancelRequest = async (id) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
     },
@@ -205,6 +215,7 @@ const handleBlockUser = async (id, userId, handleBlock) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
       requester: {
@@ -215,6 +226,7 @@ const handleBlockUser = async (id, userId, handleBlock) => {
           username: true,
           profilePicture: true,
           online: true,
+          status: true,
         },
       },
     },
@@ -230,5 +242,5 @@ export {
   cancelRequest,
   handleBlockUser,
   getFriends,
-  checkFriendRecord
+  checkFriendRecord,
 };
