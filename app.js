@@ -13,7 +13,10 @@ const users = {};
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] },
+  cors: {
+    origin: "https://whisprweb.netlify.app", // Your frontend URL
+    methods: ["GET", "POST"], // Allowed methods
+  },
 });
 
 io.on("connection", (socket) => {
@@ -198,7 +201,14 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use(cors());
+// Configure CORS to allow requests only from the frontend URL
+app.use(
+  cors({
+    origin: "https://whisprweb.netlify.app",
+    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods if needed
+    credentials: true, // Allow cookies or authentication headers if necessary
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
