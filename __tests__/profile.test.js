@@ -188,8 +188,8 @@ describe("PROFILE ROUTER TEST", () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.body).toStrictEqual({
-        secure_url: "https://new-url.com/photo.jpg",
-        public_id: "new_public_id",
+        id: "user_id",
+        profilePic: "https://new-url.com/photo.jpg",
       });
     });
 
@@ -413,12 +413,12 @@ describe("PROFILE ROUTER TEST", () => {
 
       // Assertions
       expect(response.statusCode).toBe(200);
-      expect(response.body).toEqual({ user: "Ahnaf"});
+      expect(response.body).toEqual({ user: "Ahnaf" });
 
       // Check that the user's profile photo was deleted from Cloudinary
-      expect(cloudinaryfunction.cloudinary.uploader.destroy).toHaveBeenCalledWith(
-        "user_profile_pic_public_id"
-      );
+      expect(
+        cloudinaryfunction.cloudinary.uploader.destroy
+      ).toHaveBeenCalledWith("user_profile_pic_public_id");
 
       // Check that the media arrays were processed
       expect(helperfunctions.deleteImageFromCloudinary).toHaveBeenCalledWith([

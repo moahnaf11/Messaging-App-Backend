@@ -4,6 +4,9 @@ import { jest } from "@jest/globals";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import * as friendQueries from "../prisma/friendQueries.js";
+import { getUser } from "../prisma/userQueries.js";
+
+jest.mock("../prisma/userQueries");
 
 jest.mock("../prisma/friendQueries.js");
 
@@ -44,6 +47,7 @@ describe("FRIEND ROUTER TEST", () => {
       jwt.verify = jest.fn((token, secret, callback) => {
         callback(null, { id: 1, username: "testuser" }); // Simulate a valid user object
       });
+      getUser.mockResolvedValue({});
       friendQueries.sendPostFriendRequest.mockResolvedValue({});
 
       const response = await request(app)
@@ -60,7 +64,7 @@ describe("FRIEND ROUTER TEST", () => {
       jwt.verify = jest.fn((token, secret, callback) => {
         callback(null, { id: 1, username: "testuser" }); // Simulate a valid user object
       });
-      friendQueries.sendPostFriendRequest.mockResolvedValue(null);
+      getUser.mockResolvedValue(null);
 
       const response = await request(app)
         .post("/friend/request")
@@ -68,8 +72,8 @@ describe("FRIEND ROUTER TEST", () => {
         .send({
           requesteeId: "hi123",
         });
-      expect(response.statusCode).toBe(400);
-      expect(response.body.error).toBe("failed to send friend request");
+      expect(response.statusCode).toBe(404);
+      expect(response.body.error).toBe("User not found");
     });
   });
 
@@ -210,7 +214,9 @@ describe("FRIEND ROUTER TEST", () => {
         .set("Authorization", "Bearer mytoken")
         .send({ handleBlock: "" });
       expect(response.statusCode).toBe(400);
-      expect(response.body.error).toBe("incorrect data type for handleBlock variable");
+      expect(response.body.error).toBe(
+        "incorrect data type for handleBlock variable"
+      );
     });
   });
 });
