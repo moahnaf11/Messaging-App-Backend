@@ -2,6 +2,9 @@ import { prisma } from "./prismaClient.js";
 
 const getFriends = async (id) => {
   const friends = await prisma.friend.findMany({
+    where: {
+      OR: [{ requesterId: id }, { requesteeId: id }],
+    },
     include: {
       requestee: {
         select: {
