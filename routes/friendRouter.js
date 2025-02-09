@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticateToken } from "../utils/authenticateToken.js";
 import {
   acceptRejectRequest,
+  archiveUnarchive,
   blockUser,
   deleteFriendRequest,
   getAllFriends,
@@ -19,6 +20,7 @@ friendRouter
 friendRouter.put("/request/:id", authenticateToken, acceptRejectRequest);
 friendRouter.delete("/request/:id", authenticateToken, deleteFriendRequest);
 friendRouter.put("/request/block/:id", authenticateToken, blockUser);
+friendRouter.put("/request/archive/:id", authenticateToken, archiveUnarchive)
 
 export { friendRouter };
 

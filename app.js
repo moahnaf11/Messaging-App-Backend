@@ -14,7 +14,7 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://whisprweb.netlify.app", // Your frontend URL
+    origin: "*", // Your frontend URL
     methods: ["GET", "POST"], // Allowed methods
   },
 });
@@ -204,7 +204,7 @@ io.on("connection", (socket) => {
 // Configure CORS to allow requests only from the frontend URL
 app.use(
   cors({
-    origin: "https://whisprweb.netlify.app",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods if needed
     credentials: true, // Allow cookies or authentication headers if necessary
   })

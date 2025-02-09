@@ -1,4 +1,5 @@
 import {
+  archiveUnarchiveChat,
   cancelRequest,
   checkFriendRecord,
   getFriends,
@@ -99,6 +100,19 @@ const blockUser = async (req, res) => {
   }
 };
 
+const archiveUnarchive = async (req, res) => {
+  const id = req.params.id;
+  console.log(id);
+  const userId = req.user.id;
+  const { action } = req.body;
+  const chat = await archiveUnarchiveChat(id, userId, action);
+  if (chat) {
+    return res.status(200).json(chat);
+  } else {
+    return res.status(400).json({ error: "failed to changed chat display" });
+  }
+};
+
 export {
   postRequest,
   getAllRequests,
@@ -106,4 +120,5 @@ export {
   deleteFriendRequest,
   blockUser,
   getAllFriends,
+  archiveUnarchive,
 };

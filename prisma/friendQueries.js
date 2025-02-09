@@ -238,6 +238,55 @@ const handleBlockUser = async (id, userId, handleBlock) => {
   return friend;
 };
 
+const archiveUnarchiveChat = async (id, userId, action) => {
+  const friend = await prisma.friend.findUnique({
+    where: {
+      id: id,
+    },
+  });
+  const updateData = {};
+  if (userId === friend.requesterId) {
+    updateData.requester_display = action;
+  } else if (userId === friend.requesteeId) {
+    updateData.requestee_display = action;
+  } else {
+    throw new Error("User not authorized to update this chat");
+  }
+
+  // Perform the update
+  const updatedFriend = await prisma.friend.update({
+    where: { id },
+    data: updateData,
+    include: {
+      requestee: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+          status: true,
+        },
+      },
+      requester: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+          status: true,
+        },
+      },
+    },
+  });
+
+  console.log("Updated display status of chat", updatedFriend);
+  return updatedFriend;
+};
+
 export {
   sendPostFriendRequest,
   getRequests,
@@ -246,4 +295,5 @@ export {
   handleBlockUser,
   getFriends,
   checkFriendRecord,
+  archiveUnarchiveChat,
 };
