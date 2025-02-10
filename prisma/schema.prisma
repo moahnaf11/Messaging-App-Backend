@@ -25,7 +25,7 @@ model User {
   public_id            String?
   passwordResetToken   String? // Token for password reset
   passwordResetExpires DateTime? // Expiration time for the token
-  status               String?  @default("I'm new to whispr")
+  status               String?   @default("I'm new to whispr")
   online               Boolean   @default(false) // Online/offline status
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -35,23 +35,25 @@ model User {
   receivedRequests Friend[] @relation("ReceivedRequests")
 
   // Messages sent/received
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  sentMessages     Message[]     @relation("SentMessages")
+  receivedMessages Message[]     @relation("ReceivedMessages")
   media            Media[]
+  GroupChat        GroupChat[]
+  GroupMember      GroupMember[]
 
   @@map("users")
 }
 
 // Friend Model (for friend requests and relationships)
 model Friend {
-  id          String   @id @default(uuid())
-  requesterId String
-  requesteeId String
-  status      String   @default("pending") // "pending", "accepted", "rejected", "blocked"
-  createdAt   DateTime @default(now())
-  blocker_id  String?
-  requester_display String @default("unarchived") // "archived", "unarchived", "hidden"
-  requestee_display String @default("unarchived") // "archived", "unarchived", "hidden"
+  id                String   @id @default(uuid())
+  requesterId       String
+  requesteeId       String
+  status            String   @default("pending") // "pending", "accepted", "rejected", "blocked"
+  createdAt         DateTime @default(now())
+  blocker_id        String?
+  requester_display String   @default("unarchived") // "archived", "unarchived", "hidden"
+  requestee_display String   @default("unarchived") // "archived", "unarchived", "hidden"
 
   // Relations to users
   requester User @relation("SentRequests", fields: [requesterId], references: [id], onDelete: Cascade)
@@ -60,21 +62,58 @@ model Friend {
   @@map("friends")
 }
 
+// GroupChat Model (Stores Group Info)
+model GroupChat {
+  id        String   @id @default(uuid())
+  name      String // Group name
+  creatorId String? // ID of user who created the group
+  createdAt DateTime @default(now())
+
+  // Relation to Creator
+  creator User? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
+
+  // Relation to Members
+  members GroupMember[]
+
+  // Relation to Messages
+  messages Message[]
+
+  @@map("group_chats")
+}
+
+// GroupMember Model (Stores Group Members & Their Role)
+model GroupMember {
+  id       String   @id @default(uuid())
+  userId   String // User in the group
+  groupId  String // The group the user is part of
+  role     String   @default("member") // "admin", "member"
+  joinedAt DateTime @default(now())
+
+  // Relations
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group GroupChat @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId]) // Ensure a user can't join the same group multiple times
+  @@map("group_members")
+}
+
 // Message Model (for text, images, and videos)
 model Message {
-  id         String   @id @default(uuid())
-  senderId   String
-  receiverId String
-  content    String? // Text content of the message
-  timestamp  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(uuid())
+  senderId    String
+  receiverId  String?
+  content     String? // Text content of the message
+  timestamp   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  groupChatId String?
 
   // Relations to users
-  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User  @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User? @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   // Relation to Media
-  media Media[]
+  media     Media[]
+  groupChat GroupChat? @relation(fields: [groupChatId], references: [id], onDelete: Cascade)
 
   @@map("messages")
 }
