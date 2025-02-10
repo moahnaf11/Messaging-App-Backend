@@ -36,6 +36,7 @@ const getMessagesByFriendId = async (friendId) => {
 const uploadMessageWithMedia = async (
   id,
   receiverId,
+  groupChatId,
   content,
   uploadedMedia
 ) => {
@@ -43,6 +44,7 @@ const uploadMessageWithMedia = async (
     data: {
       content: content,
       receiverId: receiverId,
+      groupChatId,
       senderId: id,
       media: {
         create: uploadedMedia.map((media) => ({
@@ -62,11 +64,12 @@ const uploadMessageWithMedia = async (
   return message;
 };
 
-const uploadMessage = async (id, receiverId, content) => {
+const uploadMessage = async (id, receiverId, groupChatId, content) => {
   const message = await prisma.message.create({
     data: {
       content: content,
       senderId: id,
+      groupChatId,
       receiverId: receiverId,
     },
     include: {

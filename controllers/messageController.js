@@ -55,11 +55,11 @@ const postMediaMessage = async (req, res) => {
     }
   }
   if (req.files && req.files.length) {
-    const { receiverId, content } = req.body;
-    if (!id || !receiverId) {
-      return res
-        .status(400)
-        .json({ error: "Sender and receiver IDs are required." });
+    const { receiverId, groupChatId, content } = req.body;
+    if (!id || (!receiverId && !groupChatId)) {
+      return res.status(400).json({
+        error: "Sender and receiver IDs/ group chat IDs are required.",
+      });
     }
     const uploadedMedia = [];
     for (const file of req.files) {
@@ -74,6 +74,7 @@ const postMediaMessage = async (req, res) => {
     const message = await uploadMessageWithMedia(
       id,
       receiverId,
+      groupChatId,
       content,
       uploadedMedia
     );
@@ -86,13 +87,13 @@ const postMediaMessage = async (req, res) => {
 
 const postMessage = async (req, res) => {
   const { id } = req.user;
-  const { receiverId, content } = req.body;
-  if (!id || !receiverId) {
-    return res
-      .status(400)
-      .json({ error: "Sender and receiver IDs are required." });
+  const { receiverId, content, groupChatId } = req.body;
+  if (!id || (!receiverId && !groupChatId)) {
+    return res.status(400).json({
+      error: "Sender and receiver IDs / group chat IDs are required.",
+    });
   }
-  const message = await uploadMessage(id, receiverId, content);
+  const message = await uploadMessage(id, receiverId, groupChatId, content);
   return res.status(200).json(message);
 };
 

@@ -37,7 +37,7 @@ describe("MESSAGE ROUTER TEST", () => {
       });
     });
 
-    it("should return an error if recieverId is missing", async () => {
+    it("should return an error if receiverId is missing", async () => {
       jwt.verify = jest.fn((token, secret, callback) => {
         callback(null, { id: 1, username: "testuser" }); // Simulate a valid user object
       });
@@ -53,7 +53,7 @@ describe("MESSAGE ROUTER TEST", () => {
         });
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.error).toBe("Sender and receiver IDs are required.");
+      expect(response.body.error).toBe("Sender and receiver IDs / group chat IDs are required.");
     });
     it("should return an error if id is missing", async () => {
       jwt.verify = jest.fn((token, secret, callback) => {
@@ -72,7 +72,7 @@ describe("MESSAGE ROUTER TEST", () => {
         });
 
       expect(response.statusCode).toBe(400);
-      expect(response.body.error).toBe("Sender and receiver IDs are required.");
+      expect(response.body.error).toBe("Sender and receiver IDs / group chat IDs are required.");
     });
   });
 
@@ -128,7 +128,7 @@ describe("MESSAGE ROUTER TEST", () => {
         .field("content", "Hello")
         .set("Authorization", "Bearer mockToken");
       expect(response.statusCode).toBe(400);
-      expect(response.body.error).toBe("Sender and receiver IDs are required.");
+      expect(response.body.error).toBe("Sender and receiver IDs/ group chat IDs are required.");
     });
 
     it("should return error if receiverId is not present", async () => {
@@ -149,7 +149,7 @@ describe("MESSAGE ROUTER TEST", () => {
         .field("content", "Hello")
         .set("Authorization", "Bearer mockToken");
       expect(response.statusCode).toBe(400);
-      expect(response.body.error).toBe("Sender and receiver IDs are required.");
+      expect(response.body.error).toBe("Sender and receiver IDs/ group chat IDs are required.");
     });
 
     it("should handle invalid file size error", async () => {
