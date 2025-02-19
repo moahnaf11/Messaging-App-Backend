@@ -27,6 +27,7 @@ const getMessagesByFriendId = async (friendId) => {
     orderBy: { timestamp: "asc" }, // Order by timestamp
     include: {
       media: true, // Include media if needed
+      sender: true,
     },
   });
 
@@ -57,6 +58,7 @@ const uploadMessageWithMedia = async (
     },
     include: {
       media: true,
+      sender: true,
     },
   });
   console.log("message created with media", message);
@@ -74,6 +76,7 @@ const uploadMessage = async (id, receiverId, groupChatId, content) => {
     },
     include: {
       media: true,
+      sender: true,
     },
   });
   console.log("message with no media", message);
@@ -87,6 +90,7 @@ const getMessage = async (id) => {
     },
     include: {
       media: true,
+      sender: true,
     },
   });
   console.log("found message", message);
@@ -98,6 +102,7 @@ const delMessage = async (id) => {
     where: {
       id: id,
     },
+    include: { sender: true },
   });
   console.log("deleted message", message);
   return message;
@@ -113,6 +118,7 @@ const editMessage = async (id, content) => {
     },
     include: {
       media: true,
+      sender: true,
     },
   });
   console.log("updated message", message);

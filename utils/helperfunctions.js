@@ -10,6 +10,14 @@ const deletePhoto = async (id, publicId) => {
   }
 };
 
+const deleteGroupPhotoFromCloudinary = async (publicId) => {
+  const result = await cloudinary.uploader.destroy(publicId);
+  console.log(result);
+  if (result.result === "ok") {
+    console.log("successfully deleted group photo from cloudinary");
+  }
+};
+
 // deleting images from cloudinary
 const deleteImageFromCloudinary = async (imgArray) => {
   const result = await cloudinary.api.delete_resources(imgArray);
@@ -37,4 +45,5 @@ export {
   deleteImageFromCloudinary,
   deleteRawFromCloudinary,
   deleteVideoFromCloudinary,
+  deleteGroupPhotoFromCloudinary
 };

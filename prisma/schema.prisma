@@ -26,7 +26,8 @@ model User {
   passwordResetToken   String? // Token for password reset
   passwordResetExpires DateTime? // Expiration time for the token
   status               String?   @default("I'm new to whispr")
-  online               Boolean   @default(false) // Online/offline status
+  online               Boolean   @default(false) // Actual online/offline status based on socket activity
+  showOnlineStatus     Boolean   @default(true) // Determines if the user wants to show online status
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -64,10 +65,13 @@ model Friend {
 
 // GroupChat Model (Stores Group Info)
 model GroupChat {
-  id        String   @id @default(uuid())
-  name      String // Group name
-  creatorId String? // ID of user who created the group
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  name       String // Group name
+  picture    String? //url to group photo
+  public_id  String?
+  creatorId  String? // ID of user who created the group
+  createdAt  DateTime @default(now())
+  admin_only Boolean  @default(false)
 
   // Relation to Creator
   creator User? @relation(fields: [creatorId], references: [id], onDelete: SetNull)
@@ -88,6 +92,7 @@ model GroupMember {
   groupId  String // The group the user is part of
   role     String   @default("member") // "admin", "member"
   joinedAt DateTime @default(now())
+  archived Boolean  @default(false)
 
   // Relations
   user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)

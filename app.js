@@ -8,6 +8,8 @@ import { profileRouter } from "./routes/profileRouter.js";
 import { friendRouter } from "./routes/friendRouter.js";
 import { messageRouter } from "./routes/messageRouter.js";
 import { groupRouter } from "./routes/groupRouter.js";
+import { allGroups, singleGroup } from "./prisma/groupQueries.js";
+import { updateUserOnline } from "./prisma/profileQueries.js";
 
 const users = {};
 
@@ -23,9 +25,16 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   // Listen for message send requests
-  socket.on("login", (userId) => {
+  socket.on("login", async (userId) => {
+    const groups = await allGroups(userId);
     users[userId] = socket.id;
     console.log("all users connected", users);
+    groups.forEach((group) => {
+      socket.join(group.id);
+      console.log(`User ${userId} joined room: ${group.id}`);
+    });
+    const data = await updateUserOnline(userId, true);
+    socket.broadcast.emit("receiveOnline", data);
   });
 
   // submitting message
@@ -40,6 +49,30 @@ io.on("connection", (socket) => {
       // If receiver is offline, store the message in the database for later retrieval
       console.log(`Receiver ${receiverId} is offline, message saved.`);
     }
+  });
+
+  // socket.on("joinGroups", (groupIds) => {
+  //   groupIds.forEach((groupId) => {
+  //     socket.join(groupId);
+  //     console.log(`User ${socket.id} joined room: ${groupId}`);
+  //   });
+  // });
+
+  // sending group message
+  socket.on("sendGroupMessage", async ({ content, groupId, senderId }) => {
+    // Send the message to all members in the room except the sender
+    socket.to(groupId).emit("receiveGroupMessage", {
+      content,
+      senderId,
+      groupId,
+    });
+  });
+
+  // send group media message
+  socket.on("sendMediaMessageGroup", (messageData) => {
+    const { data, groupId, senderId } = messageData;
+    // Emit the updated message to everyone in the room except the sender
+    socket.to(groupId).emit("receiveGroupMediaMessage", data);
   });
 
   // send media message
@@ -57,6 +90,13 @@ io.on("connection", (socket) => {
     }
   });
 
+  // delete group message
+  socket.on("deleteGroupMessage", (messageData) => {
+    const { data, groupId, senderId } = messageData;
+    // Emit the updated message to everyone in the room except the sender
+    socket.to(groupId).emit("receiveDeleteGroupMessage", data);
+  });
+
   // delete message
   socket.on("deleteMessage", (messageData) => {
     const { data, receiverId } = messageData;
@@ -70,6 +110,13 @@ io.on("connection", (socket) => {
       // If receiver is offline, delete from db
       console.log(`Receiver ${receiverId} is offline, message deleted.`);
     }
+  });
+
+  // update group message
+  socket.on("updateGroupMessage", (messageData) => {
+    const { data, groupId, senderId } = messageData;
+    // Emit the updated message to everyone in the room except the sender
+    socket.to(groupId).emit("receiveUpdatedGroupMessage", data);
   });
 
   // update message
@@ -168,6 +215,22 @@ io.on("connection", (socket) => {
     }
   });
 
+  // create group
+  socket.on("createGroup", (info) => {
+    const { data, creatorId } = info;
+    // Emit the event to all group members except the creator
+    data.members.forEach((member) => {
+      if (users[member.userId]) {
+        // join the member to the group room
+        io.sockets.sockets.get(users[member.userId]).join(data.id);
+        console.log(`user ${member.userId} joined room`);
+        if (member.userId !== creatorId) {
+          io.to(users[member.userId]).emit("groupCreated", data);
+        }
+      }
+    });
+  });
+
   // block user
   socket.on("blockuser", (friend) => {
     const { id, data } = friend;
@@ -189,12 +252,60 @@ io.on("connection", (socket) => {
     console.log("user deleted sent to everyone " + data);
   });
 
+  // remove member from group
+  socket.on("removeMember", async (data) => {
+    const { groupId, userId } = data;
+    const group = await singleGroup(groupId);
+    if (users[userId]) {
+      // Remove the user from the group room
+      io.sockets.sockets.get(users[userId]).leave(groupId);
+      console.log(`User ${users[userId]} removed from room: ${groupId}`);
+      io.to(users[userId]).emit("receiveRemoveMember", { group, userId });
+    }
+    socket.to(groupId).emit("updateGroupInfo", group);
+  });
+
+  // add user to group
+  socket.on("addMember", async (data) => {
+    const { groupId, userId } = data;
+    const group = await singleGroup(groupId);
+    if (users[userId]) {
+      io.to(users[userId]).socketsJoin(groupId);
+      console.log("new member joined the room:", groupId);
+      io.to(users[userId]).emit("receiveAddMember", group);
+    }
+    socket.to(groupId).emit("updateGroupInfo", group);
+  });
+
+  // delete group
+  socket.on("groupDeleted", ({ groupId }) => {
+    socket.to(groupId).emit("receiveDeleteGroup", groupId);
+  });
+
+  // update group member role
+  socket.on("updateMemberRole", (data) => {
+    const { groupId } = data;
+    socket.to(groupId).emit("receiveMemberRole", data);
+  });
+
+  // update group photo
+  socket.on("updateGroupPhoto", (data) => {
+    socket.to(data.id).emit("receiveUpdateGroupPhoto", data);
+  });
+
+  // toggle only admin texting mode
+  socket.on("toggleAdminChat", (data) => {
+    socket.to(data.id).emit("receiveOnlyAdminMode", data);
+  });
+
   // Handle disconnect (clean up socketId)
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     for (const userId in users) {
       if (users[userId] === socket.id) {
+        const data = await updateUserOnline(userId, false);
         delete users[userId];
         console.log(`User with ID ${userId} disconnected`);
+        socket.broadcast.emit("receiveOnline", data);
         break;
       }
     }
@@ -217,7 +328,7 @@ app.use("/users", userRouter);
 app.use("/profile", profileRouter);
 app.use("/friend", friendRouter);
 app.use("/message", messageRouter);
-app.use("group", groupRouter)
+app.use("/group", groupRouter);
 
 app.use((err, req, res, next) => {
   console.log("ERROR", err);

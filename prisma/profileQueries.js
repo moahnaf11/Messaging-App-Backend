@@ -79,11 +79,22 @@ const updateOnline = async (id, onlineStatus) => {
       id: id,
     },
     data: {
-      online: onlineStatus,
+      showOnlineStatus: onlineStatus,
     },
   });
 
   console.log("updated user online status", user);
+  return user;
+};
+
+const updateUserOnline = async (id, boolvalue) => {
+  const user = await prisma.user.update({
+    where: { id },
+    data: {
+      online: boolvalue,
+    },
+  });
+  console.log("updated users socketm online", user);
   return user;
 };
 
@@ -94,4 +105,5 @@ export {
   updateUser,
   deleteUserAccount,
   updateOnline,
+  updateUserOnline,
 };
