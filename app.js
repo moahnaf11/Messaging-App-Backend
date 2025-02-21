@@ -45,6 +45,7 @@ io.on("connection", (socket) => {
     if (receiverSocketId) {
       // If the receiver is online, emit the message to them
       io.to(receiverSocketId).emit("receiveMessage", messageData);
+      console.log("message sent to", receiverId);
     } else {
       // If receiver is offline, store the message in the database for later retrieval
       console.log(`Receiver ${receiverId} is offline, message saved.`);
@@ -72,7 +73,7 @@ io.on("connection", (socket) => {
   socket.on("sendMediaMessageGroup", (messageData) => {
     const { data, groupId, senderId } = messageData;
     // Emit the updated message to everyone in the room except the sender
-    socket.to(groupId).emit("receiveGroupMediaMessage", data);
+    socket.to(groupId).emit("receiveGroupMediaMessage", { data, groupId });
   });
 
   // send media message
@@ -82,7 +83,7 @@ io.on("connection", (socket) => {
     const receiverSocketId = users[receiverId];
     if (receiverSocketId) {
       // If the receiver is online, emit the message to them
-      io.to(receiverSocketId).emit("receiveMediaMessage", data);
+      io.to(receiverSocketId).emit("receiveMediaMessage", messageData);
       console.log("media message sent to " + receiverId, data);
     } else {
       // If receiver is offline, store the message in the database for later retrieval
@@ -94,7 +95,7 @@ io.on("connection", (socket) => {
   socket.on("deleteGroupMessage", (messageData) => {
     const { data, groupId, senderId } = messageData;
     // Emit the updated message to everyone in the room except the sender
-    socket.to(groupId).emit("receiveDeleteGroupMessage", data);
+    socket.to(groupId).emit("receiveDeleteGroupMessage", { data, groupId });
   });
 
   // delete message
@@ -104,7 +105,7 @@ io.on("connection", (socket) => {
     const receiverSocketId = users[receiverId];
     if (receiverSocketId) {
       // If the receiver is online, emit the message to them
-      io.to(receiverSocketId).emit("receiveDeleteMessage", data);
+      io.to(receiverSocketId).emit("receiveDeleteMessage", messageData);
       console.log("message deleted sent to " + receiverId, data);
     } else {
       // If receiver is offline, delete from db
@@ -116,7 +117,7 @@ io.on("connection", (socket) => {
   socket.on("updateGroupMessage", (messageData) => {
     const { data, groupId, senderId } = messageData;
     // Emit the updated message to everyone in the room except the sender
-    socket.to(groupId).emit("receiveUpdatedGroupMessage", data);
+    socket.to(groupId).emit("receiveUpdatedGroupMessage", { data, groupId });
   });
 
   // update message
@@ -126,7 +127,7 @@ io.on("connection", (socket) => {
     const receiverSocketId = users[receiverId];
     if (receiverSocketId) {
       // If the receiver is online, emit the message to them
-      io.to(receiverSocketId).emit("receiveUpdateMessage", data);
+      io.to(receiverSocketId).emit("receiveUpdateMessage", messageData);
       console.log("message updated sent to " + receiverId, data);
     } else {
       // If receiver is offline, delete from db
