@@ -2,6 +2,7 @@ import {
   archiveUnarchiveChat,
   cancelRequest,
   checkFriendRecord,
+  deleteNotifications,
   getFriends,
   getRequests,
   handleBlockUser,
@@ -58,11 +59,12 @@ const getAllRequests = async (req, res) => {
 const acceptRejectRequest = async (req, res) => {
   const validStatuses = ["accepted", "rejected"];
   const id = req.params.id;
+  const userId = req.user.id;
   const { handleRequest } = req.body;
   if (!validStatuses.includes(handleRequest)) {
     return res.status(400).json({ error: "invalid handleRequest value" });
   }
-  const friend = await updateRequestStatus(id, handleRequest);
+  const friend = await updateRequestStatus(id, handleRequest, userId);
   if (friend) {
     return res.status(200).json(friend);
   }
@@ -70,7 +72,8 @@ const acceptRejectRequest = async (req, res) => {
 
 const deleteFriendRequest = async (req, res) => {
   const id = req.params.id;
-  const friend = await cancelRequest(id);
+  const userId = req.user.id;
+  const friend = await cancelRequest(id, userId);
   if (friend) {
     return res.status(200).json(friend);
   }
@@ -113,6 +116,16 @@ const archiveUnarchive = async (req, res) => {
   }
 };
 
+const deleteNotis = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const notifications = await deleteNotifications(id, userId);
+  if (notifications) {
+    return res.status(200).json(notifications);
+  }
+  return res.status(400).json({ error: "failed to delete notifications" });
+};
+
 export {
   postRequest,
   getAllRequests,
@@ -121,4 +134,5 @@ export {
   blockUser,
   getAllFriends,
   archiveUnarchive,
+  deleteNotis,
 };

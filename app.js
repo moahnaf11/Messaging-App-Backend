@@ -10,6 +10,7 @@ import { messageRouter } from "./routes/messageRouter.js";
 import { groupRouter } from "./routes/groupRouter.js";
 import { allGroups, singleGroup } from "./prisma/groupQueries.js";
 import { updateUserOnline } from "./prisma/profileQueries.js";
+import { friendNotification } from "./prisma/friendQueries.js";
 
 const users = {};
 
@@ -38,14 +39,21 @@ io.on("connection", (socket) => {
   });
 
   // submitting message
-  socket.on("sendMessage", (messageData) => {
+  socket.on("sendMessage", async (messageData) => {
     const { content, receiverId } = messageData;
     // Check if the receiver is connected
     const receiverSocketId = users[receiverId];
+    const notification = await friendNotification(
+      messageData.content.senderId,
+      messageData.content.friendId,
+      receiverId
+    );
     if (receiverSocketId) {
       // If the receiver is online, emit the message to them
       io.to(receiverSocketId).emit("receiveMessage", messageData);
       console.log("message sent to", receiverId);
+      // save message to notifications
+      io.to(receiverSocketId).emit("receiveFriendNotification", notification);
     } else {
       // If receiver is offline, store the message in the database for later retrieval
       console.log(`Receiver ${receiverId} is offline, message saved.`);
@@ -77,14 +85,20 @@ io.on("connection", (socket) => {
   });
 
   // send media message
-  socket.on("sendMediaMessage", (messageData) => {
+  socket.on("sendMediaMessage", async (messageData) => {
     const { data, receiverId } = messageData;
     // Check if the receiver is connected
     const receiverSocketId = users[receiverId];
+    const notification = await friendNotification(
+      data.senderId,
+      data.friendId,
+      receiverId
+    );
     if (receiverSocketId) {
       // If the receiver is online, emit the message to them
       io.to(receiverSocketId).emit("receiveMediaMessage", messageData);
       console.log("media message sent to " + receiverId, data);
+      io.to(receiverSocketId).emit("receiveFriendNotification", notification);
     } else {
       // If receiver is offline, store the message in the database for later retrieval
       console.log(`Receiver ${receiverId} is offline, message saved.`);

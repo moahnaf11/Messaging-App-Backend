@@ -30,6 +30,11 @@ const getFriends = async (id) => {
           status: true,
         },
       },
+      Notification: {
+        where: {
+          receiverId: id,
+        },
+      },
     },
   });
   console.log("all friends", friends);
@@ -56,6 +61,11 @@ const sendPostFriendRequest = async (id, requesteeId) => {
       requesteeId: requesteeId,
     },
     include: {
+      Notification: {
+        where: {
+          receiverId: id,
+        },
+      },
       requestee: {
         select: {
           id: true,
@@ -126,7 +136,7 @@ const getRequests = async (id) => {
   return friends;
 };
 
-const updateRequestStatus = async (id, handleRequest) => {
+const updateRequestStatus = async (id, handleRequest, userId) => {
   if (handleRequest === "rejected") {
     const friend = await prisma.friend.delete({
       where: {
@@ -144,6 +154,11 @@ const updateRequestStatus = async (id, handleRequest) => {
       status: handleRequest,
     },
     include: {
+      Notification: {
+        where: {
+          receiverId: userId,
+        },
+      },
       requestee: {
         select: {
           id: true,
@@ -174,12 +189,17 @@ const updateRequestStatus = async (id, handleRequest) => {
   return friend;
 };
 
-const cancelRequest = async (id) => {
+const cancelRequest = async (id, userId) => {
   const friend = await prisma.friend.delete({
     where: {
       id: id,
     },
     include: {
+      Notification: {
+        where: {
+          receiverId: userId,
+        },
+      },
       requestee: {
         select: {
           id: true,
@@ -220,6 +240,11 @@ const handleBlockUser = async (id, userId, handleBlock) => {
       blocker_id: userId,
     },
     include: {
+      Notification: {
+        where: {
+          receiverId: userId,
+        },
+      },
       requestee: {
         select: {
           id: true,
@@ -270,6 +295,11 @@ const archiveUnarchiveChat = async (id, userId, action) => {
     where: { id },
     data: updateData,
     include: {
+      Notification: {
+        where: {
+          receiverId: userId,
+        },
+      },
       requestee: {
         select: {
           id: true,
@@ -301,6 +331,103 @@ const archiveUnarchiveChat = async (id, userId, action) => {
   return updatedFriend;
 };
 
+const friendNotification = async (senderId, friendId, receiverId) => {
+  const friend = await prisma.friend.update({
+    where: { id: friendId },
+    data: {
+      // Any updates to the Friend model (if needed)
+
+      // Nested create for the notification
+      Notification: {
+        create: {
+          senderId,
+          receiverId,
+        },
+      },
+    },
+    include: {
+      Notification: {
+        where: {
+          receiverId,
+        },
+      },
+      requestee: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+          showOnlineStatus: true,
+          status: true,
+        },
+      },
+      requester: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+          showOnlineStatus: true,
+          status: true,
+        },
+      },
+    },
+  });
+
+  console.log("notification created", friend);
+  return friend;
+};
+
+const deleteNotifications = async (id, userId) => {
+  const updatedFriend = await prisma.friend.update({
+    where: { id }, // Find the friend record
+    data: {
+      Notification: {
+        deleteMany: {
+          receiverId: userId, // Delete notifications where the user is the receiver
+        },
+      },
+    },
+    include: {
+      Notification: {
+        where: {
+          receiverId: userId,
+        },
+      },
+      requestee: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+          showOnlineStatus: true,
+          status: true,
+        },
+      },
+      requester: {
+        select: {
+          id: true,
+          firstname: true,
+          lastname: true,
+          username: true,
+          profilePicture: true,
+          online: true,
+          showOnlineStatus: true,
+          status: true,
+        },
+      },
+    },
+  });
+  console.log("notifications deleted", updatedFriend);
+  return updatedFriend;
+};
+
 export {
   sendPostFriendRequest,
   getRequests,
@@ -310,4 +437,6 @@ export {
   getFriends,
   checkFriendRecord,
   archiveUnarchiveChat,
+  friendNotification,
+  deleteNotifications,
 };
