@@ -5,7 +5,10 @@ import {
   archiveGroup,
   createGroup,
   deleteGroup,
+  deleteGroupNotis,
   deleteGroupPhoto,
+  deleteSingleGroupNoti,
+  getgroupNotis,
   getGroups,
   getSingleGroup,
   removeMember,
@@ -27,6 +30,7 @@ groupRouter
   .get(authenticateToken, getSingleGroup)
   .delete(authenticateToken, deleteGroup)
   .put(authenticateToken, updateName);
+groupRouter.delete("/noti/delete", authenticateToken, deleteSingleGroupNoti);
 groupRouter
   .route("/:id/upload-photo")
   .put(authenticateToken, uploadGroupPhoto)
@@ -36,4 +40,6 @@ groupRouter.put("/:id/admin-only", authenticateToken, updateAdminOnly);
 groupRouter.put("/:id/role", authenticateToken, updateRole);
 groupRouter.post("/:id/add-member", authenticateToken, addMember);
 groupRouter.delete("/:id/remove-member", authenticateToken, removeMember);
+groupRouter.get("/:id/group-notis", authenticateToken, getgroupNotis);
+groupRouter.delete("/:id/delete-notifications", authenticateToken, deleteGroupNotis)
 export { groupRouter };

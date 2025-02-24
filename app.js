@@ -8,7 +8,13 @@ import { profileRouter } from "./routes/profileRouter.js";
 import { friendRouter } from "./routes/friendRouter.js";
 import { messageRouter } from "./routes/messageRouter.js";
 import { groupRouter } from "./routes/groupRouter.js";
-import { allGroups, singleGroup } from "./prisma/groupQueries.js";
+import {
+  allGroups,
+  getGroupMembers,
+  groupMemberNotis,
+  groupNotification,
+  singleGroup,
+} from "./prisma/groupQueries.js";
 import { updateUserOnline } from "./prisma/profileQueries.js";
 import { friendNotification } from "./prisma/friendQueries.js";
 
@@ -75,13 +81,41 @@ io.on("connection", (socket) => {
       senderId,
       groupId,
     });
+    const members = await getGroupMembers(groupId, senderId);
+    const notification = await groupNotification(groupId, senderId);
+    const recipientData = members.map((member) => ({
+      notificationId: notification.id, // Reference notification
+      groupMemberId: member.id, // Assign to this group member
+    }));
+
+    const eachNoti = await groupMemberNotis(recipientData);
+
+    socket.to(groupId).emit("receiveGroupNotification", {
+      senderId,
+      groupId,
+      notification: notification.id,
+    });
   });
 
   // send group media message
-  socket.on("sendMediaMessageGroup", (messageData) => {
+  socket.on("sendMediaMessageGroup", async (messageData) => {
     const { data, groupId, senderId } = messageData;
     // Emit the updated message to everyone in the room except the sender
     socket.to(groupId).emit("receiveGroupMediaMessage", { data, groupId });
+    const members = await getGroupMembers(groupId, senderId);
+    const notification = await groupNotification(groupId, senderId);
+    const recipientData = members.map((member) => ({
+      notificationId: notification.id, // Reference notification
+      groupMemberId: member.id, // Assign to this group member
+    }));
+
+    const eachNoti = await groupMemberNotis(recipientData);
+
+    socket.to(groupId).emit("receiveGroupNotification", {
+      senderId,
+      groupId,
+      notification: notification.id,
+    });
   });
 
   // send media message

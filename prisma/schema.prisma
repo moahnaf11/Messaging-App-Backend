@@ -82,8 +82,8 @@ model GroupChat {
   members GroupMember[]
 
   // Relation to Messages
-  messages     Message[]
-  Notification Notification[]
+  messages              Message[]
+  GroupChatNotification GroupChatNotification[]
 
   @@map("group_chats")
 }
@@ -98,8 +98,9 @@ model GroupMember {
   archived Boolean  @default(false)
 
   // Relations
-  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group GroupChat @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user                           User                             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group                          GroupChat                        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  GroupChatNotificationRecipient GroupChatNotificationRecipient[]
 
   @@unique([userId, groupId]) // Ensure a user can't join the same group multiple times
   @@map("group_members")
@@ -152,13 +153,34 @@ model Notification {
   senderId   String
   receiverId String?
   friendId   String?
-  groupId    String? // Optional field, link to a group chat
   status     String   @default("unread") // "read" or "unread"
   timestamp  DateTime @default(now())
 
   // relations
-  friend Friend?    @relation(fields: [friendId], references: [id], onDelete: Cascade)
-  group  GroupChat? @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  friend Friend? @relation(fields: [friendId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model GroupChatNotification {
+  id       String @id @default(uuid())
+  senderId String
+  groupId  String // The group where this notification belongs
+
+  // Relation to Group Chat
+  group                          GroupChat                        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  GroupChatNotificationRecipient GroupChatNotificationRecipient[]
+}
+
+model GroupChatNotificationRecipient {
+  id             String @id @default(uuid())
+  notificationId String // Reference to GroupChatNotification
+  groupMemberId  String // Reference to GroupMember
+
+  // Relations
+  notification GroupChatNotification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  groupMember  GroupMember           @relation(fields: [groupMemberId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, groupMemberId]) // Ensure each member gets only one copy of a notification
+  @@map("group_chat_notification_recipients")
 }

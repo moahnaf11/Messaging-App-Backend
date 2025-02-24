@@ -1,6 +1,6 @@
 import { prisma } from "./prismaClient.js";
 
-const createGroupChat = async (name, creatorId, members) => {
+const createGroupChat = async (name, creatorId, members, myId) => {
   const group = await prisma.groupChat.create({
     data: {
       name,
@@ -14,6 +14,17 @@ const createGroupChat = async (name, creatorId, members) => {
     },
     include: {
       members: true, // Optional: To return created members in the response
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            where: {
+              groupMember: {
+                userId: myId, // Only include notifications where the user is a recipient
+              },
+            },
+          },
+        },
+      },
     },
   });
   console.log("created group", group);
@@ -29,7 +40,17 @@ const allGroups = async (id) => {
         },
       },
     },
-    include: { members: true },
+    include: {
+      members: true,
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            // include: { groupMember: true }, // Explicitly include groupMember
+            where: { groupMember: { userId: id } }, // Filter only notifications for this user
+          },
+        },
+      },
+    },
   });
   console.log("all groups part of", groups);
   return groups;
@@ -130,7 +151,7 @@ const getGroupPicture = async (id) => {
   return picture;
 };
 
-const updateGroupPic = async (id, picurl, pickey) => {
+const updateGroupPic = async (id, picurl, pickey, userId) => {
   const group = await prisma.groupChat.update({
     where: { id },
     data: {
@@ -140,13 +161,24 @@ const updateGroupPic = async (id, picurl, pickey) => {
     include: {
       members: { include: { user: true } },
       creator: true,
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            where: {
+              groupMember: {
+                userId, // Only include notifications where the user is a recipient
+              },
+            },
+          },
+        },
+      },
     },
   });
   console.log("updated group picture", group);
   return group;
 };
 
-const updateGroupName = async (id, name) => {
+const updateGroupName = async (id, name, userId) => {
   const group = await prisma.groupChat.update({
     where: {
       id,
@@ -154,7 +186,21 @@ const updateGroupName = async (id, name) => {
     data: {
       name,
     },
-    include: { members: { include: { user: true } }, creator: true },
+    include: {
+      members: { include: { user: true } },
+      creator: true,
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            where: {
+              groupMember: {
+                userId, // Only include notifications where the user is a recipient
+              },
+            },
+          },
+        },
+      },
+    },
   });
   console.log("updated group name", group);
   return group;
@@ -188,11 +234,170 @@ const archiveUnarchiveGroup = async (id, userid, action) => {
         },
       },
     },
-    include: { members: true },
+    include: {
+      members: true,
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            where: {
+              groupMember: {
+                userId: userid, // Only include notifications where the user is a recipient
+              },
+            },
+          },
+        },
+      },
+    },
   });
   console.log("updated archive status for user", group);
   return group;
 };
+
+const getGroupMembers = async (groupId, senderId) => {
+  const groupMembers = await prisma.groupMember.findMany({
+    where: {
+      groupId: groupId,
+      userId: { not: senderId }, // Exclude the sender
+    },
+    select: { id: true }, // We only need member IDs
+  });
+  console.log("all members expect sender", groupMembers);
+  return groupMembers;
+};
+
+const groupNotification = async (groupId, senderId) => {
+  const newNotification = await prisma.groupChatNotification.create({
+    data: {
+      senderId: senderId,
+      groupId: groupId,
+    },
+  });
+  console.log("created group notification", newNotification);
+  return newNotification;
+};
+
+const groupMemberNotis = async (recipientData) => {
+  const groupMemberNotifs =
+    await prisma.groupChatNotificationRecipient.createMany({
+      data: recipientData,
+    });
+  console.log(
+    "created notification for each member of the group",
+    groupMemberNotifs
+  );
+};
+
+const getGroupWithNotifications = async (groupId, userId) => {
+  const group = await prisma.groupChat.findUnique({
+    where: {
+      id: groupId, // Find the group by id
+    },
+    include: {
+      members: true,
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            include: { groupMember: true }, // Include groupMember
+            where: { groupMember: { userId } }, // Filter notifications for the specific user
+          },
+        },
+      },
+    },
+  });
+
+  console.log("Single group with notifications:", group);
+  return group;
+};
+
+const deleteGroupNotification = async (userId, notificationId) => {
+  // Delete the recipient entry directly using userId
+  const noti = await prisma.groupChatNotificationRecipient.deleteMany({
+    where: {
+      notificationId,
+      groupMember: {
+        userId: userId, // Filter by userId inside groupMember
+      },
+    },
+  });
+
+  // 2️⃣ Check if any recipients are left for this notification
+  const remainingRecipients =
+    await prisma.groupChatNotificationRecipient.findFirst({
+      where: { notificationId },
+    });
+
+  // 3️⃣ If no recipients are left, delete the group notification
+  if (!remainingRecipients) {
+    await prisma.groupChatNotification.delete({
+      where: { id: notificationId },
+    });
+
+    console.log(
+      "Group chat notification deleted since no recipients were left."
+    );
+  } else {
+    console.log(
+      "Notification deleted for user, but other recipients still exist."
+    );
+  }
+
+  console.log("Notification deleted successfully", noti);
+};
+
+const deleteAllGroupNotifs = async (userId, groupId) => {
+  const result = await prisma.$transaction(async (prisma) => {
+    const allNotisForUser =
+      await prisma.groupChatNotificationRecipient.deleteMany({
+        where: {
+          groupMember: { userId },
+          notification: { groupId },
+        },
+      });
+    console.log(
+      "deleted all group notis for user in useeffect",
+      allNotisForUser
+    );
+    // 2️⃣ Find all remaining notifications for this group
+    const remainingNotifications = await prisma.groupChatNotification.findMany({
+      where: { groupId },
+      include: { GroupChatNotificationRecipient: true }, // Include recipients
+    });
+
+    // 3️⃣ Delete group notifications that have no recipients left
+    const notificationsToDelete = remainingNotifications
+      .filter((noti) => noti.GroupChatNotificationRecipient.length === 0)
+      .map((noti) => noti.id); // Get IDs of empty notifications
+
+    if (notificationsToDelete.length > 0) {
+      await prisma.groupChatNotification.deleteMany({
+        where: { id: { in: notificationsToDelete } },
+      });
+      console.log(
+        "Deleted group notifications with no recipients:",
+        notificationsToDelete
+      );
+    }
+  });
+  const group = await prisma.groupChat.findUnique({
+    where: {
+      id: groupId,
+    },
+    include: {
+      members: true, // Include all members of the group chat
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            include: { groupMember: true }, // Explicitly include groupMember information
+            where: { groupMember: { userId } }, // Filter only notifications for the user with id
+          },
+        },
+      },
+    },
+  });
+  console.log("returned single groupchat", group);
+  return group;
+};
+
 export {
   createGroupChat,
   allGroups,
@@ -207,4 +412,10 @@ export {
   updateGroupName,
   editAdmin,
   archiveUnarchiveGroup,
+  getGroupMembers,
+  groupNotification,
+  groupMemberNotis,
+  getGroupWithNotifications,
+  deleteGroupNotification,
+  deleteAllGroupNotifs,
 };

@@ -3,10 +3,13 @@ import {
   allGroups,
   archiveUnarchiveGroup,
   createGroupChat,
+  deleteAllGroupNotifs,
+  deleteGroupNotification,
   deletingGroup,
   editAdmin,
   findMemberInGroup,
   getGroupPicture,
+  getGroupWithNotifications,
   removeUserFromGroup,
   singleGroup,
   updateGroupName,
@@ -20,11 +23,12 @@ import { upload } from "../utils/multerConfig.js";
 import multer from "multer";
 
 const createGroup = async (req, res) => {
+  const myId = req.user.id;
   const { name, creatorId, members } = req.body;
   if (!name || !creatorId || !Array.isArray(members) || members.length === 0) {
     return res.status(400).json({ message: "Invalid group data" });
   }
-  const group = await createGroupChat(name, creatorId, members);
+  const group = await createGroupChat(name, creatorId, members, myId);
   if (group) {
     return res.status(201).json(group);
   }
@@ -104,6 +108,7 @@ const updateRole = async (req, res) => {
 
 const uploadGroupPhoto = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
   const groupPicture = await getGroupPicture(id);
   if (groupPicture.public_id) {
     // delete group Picture
@@ -140,22 +145,29 @@ const uploadGroupPhoto = async (req, res) => {
   let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
   const cldRes = await handleUpload(dataURI, id, "groupPic", req.file.mimetype);
   console.log("groupPicRes", cldRes);
-  const group = await updateGroupPic(id, cldRes.secure_url, cldRes.public_id);
+  const group = await updateGroupPic(
+    id,
+    cldRes.secure_url,
+    cldRes.public_id,
+    userId
+  );
   return res.status(200).json(group);
 };
 
 const deleteGroupPhoto = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
   const groupPicture = await getGroupPicture(id);
   await deleteGroupPhotoFromCloudinary(groupPicture.public_id);
-  const group = await updateGroupPic(id, null, null);
+  const group = await updateGroupPic(id, null, null, userId);
   return res.status(200).json(group);
 };
 
 const updateName = async (req, res) => {
   const { id } = req.params;
+  const userId = req.user.id;
   const { name } = req.body;
-  const group = await updateGroupName(id, name);
+  const group = await updateGroupName(id, name, userId);
   if (group) {
     return res.status(200).json(group);
   } else {
@@ -179,9 +191,46 @@ const archiveGroup = async (req, res) => {
   const { action } = req.body;
   const group = await archiveUnarchiveGroup(id, userid, action);
   if (group) {
-    return res.status(200).json(group)
+    return res.status(200).json(group);
   }
-  return res.status(400).json({error : "failed to archive group chat for user"})
+  return res
+    .status(400)
+    .json({ error: "failed to archive group chat for user" });
+};
+
+const getgroupNotis = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  const group = await getGroupWithNotifications(id, userId);
+  if (group) {
+    return res.status(200).json(group);
+  }
+  return res.status(400), json({ error: "failed to get group with notis" });
+};
+
+const deleteSingleGroupNoti = async (req, res) => {
+  const { notificationId } = req.body;
+  const userId = req.user.id;
+  const noti = await deleteGroupNotification(userId, notificationId);
+  if (noti) {
+    return res.status(200).json(noti);
+  }
+  return res
+    .status(400)
+    .json({ error: "failed to delete single notification" });
+};
+
+const deleteGroupNotis = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  const notifs = await deleteAllGroupNotifs(userId, id);
+  if (notifs) {
+    return res.status(200).json(notifs);
+  }
+  return res
+    .status(400)
+    .json({ error: "failed to delete all group chat notis for user" });
 };
 export {
   createGroup,
@@ -195,5 +244,8 @@ export {
   deleteGroupPhoto,
   updateName,
   updateAdminOnly,
-  archiveGroup
+  archiveGroup,
+  getgroupNotis,
+  deleteSingleGroupNoti,
+  deleteGroupNotis,
 };
