@@ -88,13 +88,21 @@ const updateOnline = async (id, onlineStatus) => {
 };
 
 const updateUserOnline = async (id, boolvalue) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { id },
+  });
+
+  if (!existingUser) {
+    console.log("User not found, skipping update:", id);
+    return null; // Exit the function if the user doesn't exist
+  }
   const user = await prisma.user.update({
     where: { id },
     data: {
       online: boolvalue,
     },
   });
-  console.log("updated users socketm online", user);
+  console.log("updated users socket online", user);
   return user;
 };
 

@@ -317,7 +317,7 @@ io.on("connection", (socket) => {
   // add user to group
   socket.on("addMember", async (data) => {
     const { groupId, userId } = data;
-    const group = await singleGroup(groupId);
+    const group = await singleGroup(groupId, userId);
     if (users[userId]) {
       io.to(users[userId]).socketsJoin(groupId);
       console.log("new member joined the room:", groupId);
@@ -354,7 +354,9 @@ io.on("connection", (socket) => {
         const data = await updateUserOnline(userId, false);
         delete users[userId];
         console.log(`User with ID ${userId} disconnected`);
-        socket.broadcast.emit("receiveOnline", data);
+        if (data) {
+          socket.broadcast.emit("receiveOnline", data);
+        }
         break;
       }
     }

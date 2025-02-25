@@ -56,18 +56,30 @@ const allGroups = async (id) => {
   return groups;
 };
 
-const singleGroup = async (id) => {
+const singleGroup = async (id, userId) => {
   const group = await prisma.groupChat.findUnique({
     where: {
       id,
     },
     include: {
-      members: { include: { user: true } }, // Include member details
+      members: { include: { user: true } }, 
+      GroupChatNotification: {
+        include: {
+          GroupChatNotificationRecipient: {
+            where: {
+              groupMember: {
+                userId, // Only include notifications where the user is a recipient
+              },
+            },
+          },
+        },
+      },
       creator: true,
       messages: {
         orderBy: { timestamp: "asc" },
         include: { media: true, sender: true },
       }, // Get messages in order
+      
     },
   });
   console.log("single group with messages ordered", group);

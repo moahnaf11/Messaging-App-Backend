@@ -46,7 +46,8 @@ const getGroups = async (req, res) => {
 
 const getSingleGroup = async (req, res) => {
   const { id } = req.params;
-  const group = await singleGroup(id);
+  const userId = req.user.id;
+  const group = await singleGroup(id, userId);
   if (group) {
     return res.status(200).json(group);
   }
