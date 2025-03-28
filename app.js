@@ -386,7 +386,7 @@ io.on("connection", (socket) => {
 // Configure CORS to allow requests only from the frontend URL
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://whisprweb.netlify.app",
     methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods if needed
     credentials: true, // Allow cookies or authentication headers if necessary
   })
