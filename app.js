@@ -33,6 +33,7 @@ io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   // Listen for message send requests
   socket.on("login", async (userId) => {
+    console.log(`Received login event for userId: ${userId}`);
     const groups = await allGroups(userId);
     users[userId] = socket.id;
     console.log("all users connected", users);
@@ -63,6 +64,24 @@ io.on("connection", (socket) => {
     } else {
       // If receiver is offline, store the message in the database for later retrieval
       console.log(`Receiver ${receiverId} is offline, message saved.`);
+    }
+  });
+
+  // set typing state for 1-1 chats
+  socket.on("typingstate", ({ user, id, typingValue }) => {
+    console.log(user);
+    console.log(user.id);
+    if (users[user.id]) {
+      // If the receiver is online, emit the message to them
+      io.to(users[user.id]).emit("settypingstate", {
+        user,
+        chatroom: id,
+        typingValue,
+      });
+      console.log("typing set sent to", user.id);
+    } else {
+      // If receiver is offline, store the message in the database for later retrieval
+      console.log(`Receiver ${user.id} is offline`);
     }
   });
 
@@ -367,7 +386,7 @@ io.on("connection", (socket) => {
 // Configure CORS to allow requests only from the frontend URL
 app.use(
   cors({
-    origin: "https://whisprweb.netlify.app",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods if needed
     credentials: true, // Allow cookies or authentication headers if necessary
   })
